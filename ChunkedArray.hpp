@@ -64,6 +64,8 @@ namespace Nektar
     public:
 	// Unit of data is a set of short arrays
 	struct ChunkUnit {
+	    // number of elements
+	    size_t size{0};
 	    // generate input variables
 #define BOOST_PP_LOCAL_MACRO(n)   GEN_INVAR(n)
 #define BOOST_PP_LOCAL_LIMITS     (0, NUM_IN_OUT_VARS - 1)
@@ -132,6 +134,8 @@ namespace Nektar
 	    PRAGMA_VECTORIZE_IVDEP
 	    for (int j = 0; j < chunk_len; ++j)
 	    {
+		// set chunk size
+		m_data[i].size = chunk_len;
 		// generate assignments to m_data[i].inK[j] for all K
 		// e.g: m_data[i].in2[j] = inarray[2][i*chunk_len + j];
 #define BOOST_PP_LOCAL_MACRO(n) m_data[i].in##n[j] = inarray[n][i*chunk_len + j];
@@ -143,6 +147,8 @@ namespace Nektar
 	PRAGMA_VECTORIZE_IVDEP
 	for (unsigned int j = 0; j < m_remainder; ++j)
 	{
+	    m_data[m_num_chunks - 1].size = m_remainder;
+	    // generate assignments to m_data[i].inK[j] for all K
 #define BOOST_PP_LOCAL_MACRO(n) m_data[m_num_chunks - 1].in##n[j] = \
 		inarray[n][(m_num_chunks-1)*chunk_len + j];
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)

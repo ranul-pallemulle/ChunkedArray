@@ -16,9 +16,7 @@ Array<OneD, Array<OneD, NekDouble> > cellSol;
 Array<OneD, Array<OneD, NekDouble> > wsp;
 Array<OneD, Array<OneD, NekDouble> > gates_tau;
 
-#define CHNKLN 512
-
-using NekChunkArray = Nektar::ChunkArray<double, CHNKLN, 8>;
+using NekChunkArray = Nektar::ChunkArray<double, 512, 8>;
 NekChunkArray m_data;
 
 extern NekDouble lastTime;
@@ -65,13 +63,13 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
     NekDouble alpha, beta;
 	
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// E_Na, chunk.out14[i] == tmp_E_Na
 	chunk.out14[i] = R*T*log(Na_o/chunk.in16[i])/F;
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Sodium I_Na, chunk.out15[i] == tmp_I_Na
 	chunk.out15[i] = C_m * g_Na *
@@ -82,7 +80,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out16[i] = -chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Background current, sodium, chunk.out15[i] == tmp_I_b_Na
 	chunk.out15[i] = C_m * g_b_Na *
@@ -91,7 +89,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out16[i] = chunk.out16[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// V - E_K, chunk.out14[i] == tmp_V_E_k
 	chunk.out14[i] = chunk.in0[i] -
@@ -104,7 +102,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = -chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Transient Outward K+ current, chunk.out15[i] == tmp_I_to
 	chunk.out15[i] = C_m * g_to *
@@ -114,7 +112,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Ultrarapid Delayed rectifier K+ current, chunk.out15[i] ==
 	chunk.out15[i] = C_m * g_Kur_scaling * chunk.in7[i] *
@@ -125,7 +123,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Rapid delayed outtward rectifier K+ current, chunk.out15[i]
 	chunk.out15[i] = C_m * g_Kr * chunk.in8[i] *
@@ -134,7 +132,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Slow delayed outtward rectifier K+ current, chunk.out15[i]
 	chunk.out15[i] = C_m * g_Ks *
@@ -143,7 +141,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Background current, calcium, chunk.out1[i] == tmp_I_b_Ca
 	chunk.out1[i] = C_m * g_b_Ca * (chunk.in0[i] - 
@@ -151,7 +149,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out0[i] = chunk.out0[i] - chunk.out1[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// L-Type Ca2+ current, outtarray[2] == tmp_I_Ca_L
 	chunk.out2[i] = C_m * g_Ca_L * chunk.in11[i] * chunk.in12[i] *
@@ -159,7 +157,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out0[i] = chunk.out0[i] - chunk.out2[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Na-K Pump Current, outtarray[14] == tmp_f_Na_k
 	chunk.out14[i] = -F/R/T * chunk.in0[i];
@@ -173,7 +171,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out18[i] = 2.0 * chunk.out15[i] + chunk.out18[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Na-Ca exchanger current, chunk.out3[i] == tmp_I_Na_Ca,
 	chunk.out11[i] = exp((gamma_d - 1.0) * F/R/T * chunk.in0[i]);
@@ -190,7 +188,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out16[i] = -3.0 * chunk.out3[i] + chunk.out16[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// Calcium pump current, chunk.out4[i] == tmp_I_p_Ca
 	chunk.out4[i] = C_m * I_p_Ca_max *
@@ -211,7 +209,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out6[i] = NSR_I_up_max/NSR_I_Ca_max * chunk.in20[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// I_up, chunk.out7[i] == tmp_I_up
 	chunk.out7[i] = NSR_I_up_max / 
@@ -230,7 +228,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 				chunk.out2[i] - chunk.out1[i]) / F) / V_i;
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// B2, outarray[10] == tmp_B2
 	chunk.out10[i] = Cmdn_max * Km_Cmdn /
@@ -253,7 +251,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	     ((Km_Csqn + chunk.in19[i]) * (Km_Csqn + chunk.in19[i])));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// m
 	// chunk.in0[i] == v, chunk.in1[i] == x,
@@ -265,7 +263,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out1[i] = alpha*chunk.gate0[i];
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// h
 	// chunk.in0[i] == v, chunk.in2[i] == x,
@@ -279,7 +277,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out2[i] = alpha*chunk.gate1[i];
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// j
 	// chunk.in0[i] == v, chunk.in3[i] == x,
@@ -294,7 +292,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out3[i] = alpha*(chunk.gate2[i]);
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// oa
 	// chunk.in0[i] == v, chunk.in4[i] == x,
@@ -305,7 +303,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out4[i] = (1.0/(1.0+exp(-(chunk.in0[i]+20.47)/17.54)));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// oi
 	// chunk.in0[i] == v, chunk.in5[i] == x,
@@ -316,7 +314,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out5[i] = (1.0/(1.0+exp((chunk.in0[i]+43.1)/5.3)));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// ua
 	// chunk.in0[i] == v, chunk.in6[i] == x,
@@ -327,7 +325,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out6[i] = 1.0/(1.0+exp(-(chunk.in0[i]+30.3)/9.6));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// ui
 	// chunk.in0[i] == v, chunk.in7[i] == x,
@@ -338,7 +336,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out7[i] = 1.0/(1.0+exp((chunk.in0[i]-99.45)/27.48));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// xr
 	// chunk.in0[i] == v, chunk.in8[i] == x,
@@ -349,7 +347,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out8[i] = 1.0/(1+exp(-(chunk.in0[i]+14.1)/6.5));
     }
 #pragma omp simd private(alpha,beta)
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// xs
 	// chunk.in0[i] == v, chunk.in9[i] == x,
@@ -360,7 +358,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out9[i] = 1.0/sqrt(1.0+exp(-(chunk.in0[i]-19.9)/12.7));
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// d
 	// chunk.in0[i] == v, chunk.in10[i] == x,
@@ -369,7 +367,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out10[i] = 1.0/(1.0 + exp(-(chunk.in0[i]+10)/8.0));
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// f
 	// chunk.in0[i] == v, chunk.in11[i] == x,
@@ -378,7 +376,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out11[i] = exp((-(chunk.in0[i] + 28.0)) / 6.9) / (1.0 + exp((-(chunk.in0[i] + 28.0)) / 6.9));
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// f_Ca
 	// chunk.in0[i] == v, chunk.in12[i] == x,
@@ -387,14 +385,14 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out12[i] = 1.0/(1.0+chunk.in17[i]/0.00035);
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// outarray[15] == tmp_Fn
 	chunk.out15[i] = 0.5*5e-13*chunk.out2[i]/F + (-0.2*5e-13)*chunk.out3[i]/F;
 	chunk.out15[i] = 1e-12*JSR_V_rel*chunk.out8[i] - chunk.out15[i];
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// u
 	// chunk.out15[i] == v, chunk.in13[i] == x,
@@ -403,7 +401,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out13[i] = 1.0/(1.0 + exp(-(chunk.out15[i] - 3.4175e-13)/1.367e-15));
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// v
 	// chunk.out15[i] == v, chunk.in14[i] == x,
@@ -412,7 +410,7 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
 	chunk.out14[i] = 1.0 - 1.0/(1.0 + exp(-(chunk.out15[i] - 6.835e-14)/13.67e-16));
     }
     PRAGMA_VECTORIZE_IVDEP
-    for (int i = 0; i < CHNKLN; ++i)
+    for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	// w
 	// chunk.in0[i] == v, chunk.in15[i] == x,
@@ -438,7 +436,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 	    v_Update(chunk);
 
 	    PRAGMA_VECTORIZE_IVDEP
-	    for (int j = 0; j < CHNKLN; ++j)
+	    for (unsigned int j = 0; j < chunk.size; ++j)
 	    {
 		// Forward Euler on voltage
 		chunk.in0[j] = delta_t * chunk.out0[j] + chunk.in0[j];
@@ -472,7 +470,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 	v_Update(chunk);
 
 	PRAGMA_VECTORIZE_IVDEP
-	for (int j = 0; j < CHNKLN; ++j)
+	for (unsigned int j = 0; j < chunk.size; ++j)
 	{
 	    // Forward Euler on concentrations
 #define BOOST_PP_LOCAL_MACRO(n)						\
