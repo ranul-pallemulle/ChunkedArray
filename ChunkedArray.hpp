@@ -28,12 +28,16 @@
 
 #if defined(__INTEL_COMPILER)
 #define PRAGMA_VECTORIZE_IVDEP _Pragma("ivdep")
+#define PRAGMA_VECTORIZE_ALIGNED _Pragma("vector aligned")
 #elif defined (__clang__)
 #define PRAGMA_VECTORIZE_IVDEP _Pragma("clang loop vectorize(enable)")
+#define PRAGMA_VECTORIZE_ALIGNED
 #elif defined(__GNUC__)
 #define PRAGMA_VECTORIZE_IVDEP _Pragma("GCC ivdep")
+#define PRAGMA_VECTORIZE_ALIGNED
 #elif defined (_MSC_VER)
 #define PRAGMA_VECTORIZE_IVDEP __pragma("loop (ivdep)")
+#define PRAGMA_VECTORIZE_ALIGNED
 #endif
 
 

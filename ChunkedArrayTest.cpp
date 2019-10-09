@@ -62,279 +62,361 @@ void v_Update(NekChunkArray& pChunks)
 {
     for (auto& chunk : pChunks)
     {
-	NekDouble alpha, beta;
-	
 	PRAGMA_VECTORIZE_IVDEP
+	PRAGMA_VECTORIZE_ALIGNED
 	for (unsigned int i = 0; i < chunk.size; ++i)
 	{
+	    NekDouble& V = chunk.in0[i];
+	    NekDouble& m = chunk.in1[i];
+	    NekDouble& h = chunk.in2[i];
+	    NekDouble& j = chunk.in3[i];
+	    NekDouble& o_a = chunk.in4[i];
+	    NekDouble& o_i = chunk.in5[i];
+	    NekDouble& u_a = chunk.in6[i];
+	    NekDouble& u_i = chunk.in7[i];
+	    NekDouble& x_r = chunk.in8[i];
+	    NekDouble& x_s = chunk.in9[i];
+	    NekDouble& d = chunk.in10[i];
+	    NekDouble& f = chunk.in11[i];
+	    NekDouble& f_Ca = chunk.in12[i];
+	    NekDouble& u = chunk.in13[i];
+	    NekDouble& v = chunk.in14[i];
+	    NekDouble& w = chunk.in15[i];
+	    NekDouble& Na_i = chunk.in16[i];
+	    NekDouble& Ca_i = chunk.in17[i];
+	    NekDouble& K_i = chunk.in18[i];
+	    NekDouble& Ca_rel = chunk.in19[i];
+	    NekDouble& Ca_up = chunk.in20[i];
+
+	    NekDouble& V_new = chunk.out0[i];
+	    NekDouble& m_new = chunk.out1[i];
+	    NekDouble& h_new = chunk.out2[i];
+	    NekDouble& j_new = chunk.out3[i];
+	    NekDouble& oa_new = chunk.out4[i];
+	    NekDouble& oi_new = chunk.out5[i];
+	    NekDouble& ua_new = chunk.out6[i];
+	    NekDouble& ui_new = chunk.out7[i];
+	    NekDouble& xr_new = chunk.out8[i];
+	    NekDouble& xs_new = chunk.out9[i];
+	    NekDouble& d_new = chunk.out10[i];
+	    NekDouble& f_new = chunk.out11[i];
+	    NekDouble& f_Ca_new = chunk.out12[i];
+	    NekDouble& u_new = chunk.out13[i];
+	    NekDouble& v_new = chunk.out14[i];
+	    NekDouble& w_new = chunk.out15[i];
+	    NekDouble& Na_i_new = chunk.out16[i];
+	    NekDouble& Ca_i_new = chunk.out17[i];
+	    NekDouble& K_i_new = chunk.out18[i];
+	    NekDouble& Ca_rel_new = chunk.out19[i];
+	    NekDouble& Ca_up_new = chunk.out20[i];
+
+	    NekDouble& m_gate = chunk.gate0[i];
+	    NekDouble& h_gate = chunk.gate1[i];
+	    NekDouble& j_gate = chunk.gate2[i];
+	    NekDouble& oa_gate = chunk.gate3[i];
+	    NekDouble& oi_gate = chunk.gate4[i];
+	    NekDouble& ua_gate = chunk.gate5[i];
+	    NekDouble& ui_gate = chunk.gate6[i];
+	    NekDouble& xr_gate = chunk.gate7[i];
+	    NekDouble& xs_gate = chunk.gate8[i];
+	    NekDouble& d_gate = chunk.gate9[i];
+	    NekDouble& f_gate = chunk.gate10[i];
+	    NekDouble& f_Ca_gate = chunk.gate11[i];
+	    NekDouble& u_gate = chunk.gate12[i];
+	    NekDouble& v_gate = chunk.gate13[i];
+	    NekDouble& w_gate = chunk.gate14[i];
+	    
+	    NekDouble& tmp_E_Na = chunk.out14[i];
+	    NekDouble& tmp_I_Na = chunk.out15[i];
+	    NekDouble& tmp_I_b_Na = chunk.out15[i];
+	    NekDouble& tmp_V_E_k = chunk.out14[i];
+	    NekDouble& tmp_I_K1 = chunk.out15[i];
+	    NekDouble& tmp_I_to = chunk.out15[i];
+	    NekDouble& tmp_I_kur = chunk.out15[i];
+	    NekDouble& tmp_I_Kr = chunk.out15[i];
+	    NekDouble& tmp_I_Ks = chunk.out15[i];
+	    NekDouble& tmp_I_b_Ca = chunk.out1[i];
+	    NekDouble& tmp_I_Ca_L = chunk.out2[i];
+	    NekDouble& tmp_f_Na_k = chunk.out14[i];
+	    NekDouble& tmp_I_Na_K = chunk.out15[i];
+	    NekDouble& tmp_I_Na_Ca = chunk.out3[i];
+	    NekDouble& tmp_I_p_Ca = chunk.out4[i];
+	    NekDouble& tmp_I_tr = chunk.out5[i];
+	    NekDouble& tmp_I_up_leak = chunk.out6[i];
+	    NekDouble& tmp_I_up = chunk.out7[i];
+	    NekDouble& tmp_I_rel = chunk.out8[i];
+	    NekDouble& tmp_B1 = chunk.out9[i];
+	    NekDouble& tmp_B2 = chunk.out10[i];
+	    NekDouble& tmp = chunk.out11[i];
+	    NekDouble& tmp2 = chunk.out12[i];
+	    NekDouble& tmp_Fn = chunk.out15[i];
+	    NekDouble& alpha = chunk.out11[i];
+	    NekDouble& beta = chunk.out12[i];
+	    
+	    
+	    
 	    // E_Na, chunk.out14[i] == tmp_E_Na
-	    chunk.out14[i] = R*T*log(Na_o/chunk.in16[i])/F;
+	    tmp_E_Na = R*T*log(Na_o/Na_i)/F;
 
 	    // Sodium I_Na, chunk.out15[i] == tmp_I_Na
-	    chunk.out15[i] = C_m * g_Na *
-		chunk.in2[i] * chunk.in3[i] *
-		chunk.in1[i] * chunk.in1[i] * chunk.in1[i] *
-		(chunk.in0[i] - chunk.out14[i]);
-	    chunk.out0[i] = -chunk.out15[i]; // chunk.out0[i] == 0 at start
-	    chunk.out16[i] = -chunk.out15[i];
+	    tmp_I_Na = C_m * g_Na *
+		h * j *
+	        m * m * m *
+		(V - tmp_E_Na);
+	    V_new = -tmp_I_Na; // chunk.out0[i] == 0 at start
+	    Na_i_new = -tmp_I_Na;
 
 	    // Background current, sodium, chunk.out15[i] == tmp_I_b_Na
-	    chunk.out15[i] = C_m * g_b_Na *
-		(chunk.in0[i] - chunk.out14[i]);
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out16[i] = chunk.out16[i] - chunk.out15[i];
+	    tmp_I_b_Na = C_m * g_b_Na *
+		(V - tmp_E_Na);
+	    V_new = V_new - tmp_I_b_Na;
+	    Na_i_new = Na_i_new - tmp_I_b_Na;
 
 	    // V - E_K, chunk.out14[i] == tmp_V_E_k
-	    chunk.out14[i] = chunk.in0[i] -
-		R*T*log(K_o / chunk.in18[i])/F;
+	    tmp_V_E_k = V -
+		R*T*log(K_o / K_i)/F;
 
 	    // Potassium I_K1, chunk.out15[i] == tmp_I_K1
-	    chunk.out15[i] = C_m * g_K1 *
-		chunk.out14[i] / (1.0 + exp(0.07*(80.0 + chunk.in0[i])));
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out18[i] = -chunk.out15[i];
+	    tmp_I_K1 = C_m * g_K1 *
+		tmp_V_E_k / (1.0 + exp(0.07*(80.0 + V)));
+	    V_new = V_new - tmp_I_K1;
+	    K_i_new = -tmp_I_K1;
 
 	    // Transient Outward K+ current, chunk.out15[i] == tmp_I_to
-	    chunk.out15[i] = C_m * g_to *
-		chunk.in4[i] * chunk.in4[i] * chunk.in4[i] *
-		chunk.in5[i] * chunk.out14[i];
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
+	    tmp_I_to = C_m * g_to *
+		o_a * o_a * o_a *
+		o_i * tmp_V_E_k;
+	    V_new = V_new - tmp_I_to;
+	    K_i_new = K_i_new - tmp_I_to;
 
 	    // Ultrarapid Delayed rectifier K+ current, chunk.out15[i] ==
-	    chunk.out15[i] = C_m * g_Kur_scaling * chunk.in7[i] *
-		chunk.in6[i] * chunk.in6[i] * chunk.in6[i] *
-		chunk.out14[i] * (0.005 +
-					  (0.05 / (1.0 + exp(-1.0*(-15.0 + chunk.in0[i])/13.0))));
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
+	    tmp_I_kur = C_m * g_Kur_scaling * u_i *
+		u_a * u_a * u_a *
+		tmp_V_E_k * (0.005 +
+			     (0.05 / (1.0 + exp(-1.0*(-15.0 + V)/13.0))));
+	    V_new = V_new - tmp_I_kur;
+	    K_i_new = K_i_new - tmp_I_kur;
 
 	    // Rapid delayed outtward rectifier K+ current, chunk.out15[i]
-	    chunk.out15[i] = C_m * g_Kr * chunk.in8[i] *
-		chunk.out14[i] / (1.0 + exp((15.0 + chunk.in0[i]) / 22.4));
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
+	    tmp_I_Kr = C_m * g_Kr * x_r *
+		tmp_V_E_k / (1.0 + exp((15.0 + V) / 22.4));
+	    V_new = V_new - tmp_I_Kr;
+	    K_i_new = K_i_new - tmp_I_Kr;
 
 	    // Slow delayed outtward rectifier K+ current, chunk.out15[i]
-	    chunk.out15[i] = C_m * g_Ks *
-		chunk.in9[i] * chunk.in9[i] * chunk.out14[i];
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out18[i] = chunk.out18[i] - chunk.out15[i];
+	    tmp_I_Ks = C_m * g_Ks *
+		x_s * x_s * tmp_V_E_k;
+	    V_new = V_new - tmp_I_Ks;
+	    K_i_new = K_i_new - tmp_I_Ks;
 
 	    // Background current, calcium, chunk.out1[i] == tmp_I_b_Ca
-	    chunk.out1[i] = C_m * g_b_Ca * (chunk.in0[i] - 
-						    (0.5 * R * T * log(Ca_o / chunk.in17[i]) / F));
-	    chunk.out0[i] = chunk.out0[i] - chunk.out1[i];
+	    tmp_I_b_Ca = C_m * g_b_Ca * (V - 
+					 (0.5 * R * T * log(Ca_o / Ca_i) / F));
+	    V_new = V_new - tmp_I_b_Ca;
 
 	    // L-Type Ca2+ current, outtarray[2] == tmp_I_Ca_L
-	    chunk.out2[i] = C_m * g_Ca_L * chunk.in11[i] * chunk.in12[i] *
-		chunk.in10[i] * (-65.0 + chunk.in0[i]);
-	    chunk.out0[i] = chunk.out0[i] - chunk.out2[i];
+	    tmp_I_Ca_L = C_m * g_Ca_L * f * f_Ca *
+		d * (-65.0 + V);
+	    V_new = V_new - tmp_I_Ca_L;
 
 	    // Na-K Pump Current, outtarray[14] == tmp_f_Na_k
-	    chunk.out14[i] = -F/R/T * chunk.in0[i];
-	    chunk.out11[i] = 0.0365 * sigma * exp(chunk.out14[i]);
-	    chunk.out14[i] = 1.0 + chunk.out11[i] + 
-		0.1245 * exp(-0.1 * F/R/T * chunk.in0[i]);
-	    chunk.out15[i] = (C_m * I_Na_K_max * K_o / (K_o + K_i)) /
-		(chunk.out14[i] * (1.0 + pow(K_m_Na_i / chunk.in16[i], 1.5)));
-	    chunk.out0[i] = chunk.out0[i] - chunk.out15[i];
-	    chunk.out16[i] = -3.0 * chunk.out15[i] + chunk.out16[i];
-	    chunk.out18[i] = 2.0 * chunk.out15[i] + chunk.out18[i];
+	    tmp_f_Na_k = -F/R/T * V;
+	    tmp = 0.0365 * sigma * exp(tmp_f_Na_k);
+	    tmp_f_Na_k = 1.0 + tmp + 
+		0.1245 * exp(-0.1 * F/R/T * V);
+	    tmp_I_Na_K = (C_m * I_Na_K_max * K_o / (K_o + K_i)) /
+		(tmp_f_Na_k * (1.0 + pow(K_m_Na_i / Na_i, 1.5)));
+	    V_new = V_new - tmp_I_Na_K;
+	    Na_i_new = -3.0 * tmp_I_Na_K + Na_i_new;
+	    K_i_new = 2.0 * tmp_I_Na_K + K_i_new;
 
 	    // Na-Ca exchanger current, chunk.out3[i] == tmp_I_Na_Ca,
-	    chunk.out11[i] = exp((gamma_d - 1.0) * F/R/T * chunk.in0[i]);
-	    chunk.out3[i] = (K_m_Na * K_m_Na * K_m_Na + Na_o * Na_o * Na_o) *
+	    tmp = exp((gamma_d - 1.0) * F/R/T * V);
+	    tmp_I_Na_Ca = (K_m_Na * K_m_Na * K_m_Na + Na_o * Na_o * Na_o) *
 		(K_m_Ca + Ca_o) * 
-		(1.0 + K_sat * chunk.out11[i]);
-	    chunk.out12[i] = chunk.in17[i] * Na_o * Na_o * Na_o * chunk.out11[i];
-	    chunk.out11[i] = C_m * I_NaCa_max *
-		(Ca_o * chunk.in16[i] * chunk.in16[i] *
-		 chunk.in16[i] * exp(gamma_d * F/R/T * chunk.in0[i])
-		 - chunk.out12[i]);
-	    chunk.out3[i] = chunk.out11[i] / chunk.out3[i];
-	    chunk.out0[i] = chunk.out0[i] - chunk.out3[i];
-	    chunk.out16[i] = -3.0 * chunk.out3[i] + chunk.out16[i];
+		(1.0 + K_sat * tmp);
+	    tmp2 = Ca_i * Na_o * Na_o * Na_o * tmp;
+	    tmp = C_m * I_NaCa_max *
+		(Ca_o * Na_i * Na_i *
+		 Na_i * exp(gamma_d * F/R/T * V)
+		 - tmp2);
+	    tmp_I_Na_Ca = tmp / tmp_I_Na_Ca;
+	    V_new = V_new - tmp_I_Na_Ca;
+	    Na_i_new = -3.0 * tmp_I_Na_Ca + Na_i_new;
 
 	    // Calcium pump current, chunk.out4[i] == tmp_I_p_Ca
-	    chunk.out4[i] = C_m * I_p_Ca_max *
-		chunk.in17[i] / (0.0005 + chunk.in17[i]);
-	    chunk.out0[i] = chunk.out0[i] - chunk.out4[i];
+	    tmp_I_p_Ca = C_m * I_p_Ca_max *
+		Ca_i / (0.0005 + Ca_i);
+	    V_new = V_new - tmp_I_p_Ca;
 
 	    // Scale currents by capacitance
-	    chunk.out0[i] = 1.0/C_m * chunk.out0[i];
+	    V_new = 1.0/C_m * V_new;
 
 	    // Scale sodium and potassium by FV_i
-	    chunk.out16[i] = 1.0/F/V_i * chunk.out16[i];
-	    chunk.out18[i] = 1.0/F/V_i * chunk.out18[i];
+	    Na_i_new = 1.0/F/V_i * Na_i_new;
+	    K_i_new = 1.0/F/V_i * K_i_new;
 
 	    // I_tr, chunk.out5[i] == tmp_I_tr
-	    chunk.out5[i] = (chunk.in20[i] - chunk.in19[i]) / tau_tr;
+	    tmp_I_tr = (Ca_up - Ca_rel) / tau_tr;
 
 	    // I_up_leak, chunk.out6[i] == tmp_I_up_leak
-	    chunk.out6[i] = NSR_I_up_max/NSR_I_Ca_max * chunk.in20[i];
+	    tmp_I_up_leak = NSR_I_up_max/NSR_I_Ca_max * Ca_up;
 
 	    // I_up, chunk.out7[i] == tmp_I_up
-	    chunk.out7[i] = NSR_I_up_max / 
-		(1.0 + (NSR_K_up / chunk.in17[i]));
+	    tmp_I_up = NSR_I_up_max / 
+		(1.0 + (NSR_K_up / Ca_i));
 
 	    // I_rel, chunk.out8[i] == tmp_I_rel
-	    chunk.out8[i] = JSR_K_rel * chunk.in14[i] * chunk.in15[i] *
-		chunk.in13[i] * chunk.in13[i] *
-		(chunk.in19[i] - chunk.in17[i]);
+	    tmp_I_rel = JSR_K_rel * v * w *
+		u * u *
+		(Ca_rel - Ca_i);
 
 	    // B1, chunk.out9[i] == tmp_B1
-	    chunk.out9[i] = (JSR_V_rel * chunk.out8[i] -
-			     JSR_V_up * chunk.out7[i] + 
-			     JSR_V_up * chunk.out6[i] + 
-			     0.5 * (2.0 * chunk.out3[i] - chunk.out4[i] - 
-				    chunk.out2[i] - chunk.out1[i]) / F) / V_i;
+	    tmp_B1 = (JSR_V_rel * tmp_I_rel -
+			     JSR_V_up * tmp_I_up + 
+			     JSR_V_up * tmp_I_up_leak + 
+			     0.5 * (2.0 * tmp_I_Na_Ca - tmp_I_p_Ca - 
+				    tmp_I_Ca_L - tmp_I_b_Ca) / F) / V_i;
 
 	    // B2, outarray[10] == tmp_B2
-	    chunk.out10[i] = Cmdn_max * Km_Cmdn /
-		((Km_Cmdn + chunk.in17[i]) * (Km_Cmdn + chunk.in17[i]));
-	    chunk.out11[i] = Trpn_max * Km_Trpn /
-		((Km_Trpn + chunk.in17[i]) * (Km_Trpn + chunk.in17[i]));
-	    chunk.out10[i] = 1.0 + chunk.out10[i] + chunk.out11[i];
+	    tmp_B2 = Cmdn_max * Km_Cmdn /
+		((Km_Cmdn + Ca_i) * (Km_Cmdn + Ca_i));
+	    tmp = Trpn_max * Km_Trpn /
+		((Km_Trpn + Ca_i) * (Km_Trpn + Ca_i));
+	    tmp_B2 = 1.0 + tmp_B2 + tmp;
 	
 	    // Calcium concentration (18)
-	    chunk.out17[i] = chunk.out9[i] / chunk.out10[i];
+	    Ca_i_new = tmp_B1 / tmp_B2;
 	
 	    // Calcium up (21)
-	    chunk.out20[i] = -JSR_V_rel/JSR_V_up * chunk.out5[i] +
-		chunk.out7[i] - chunk.out6[i];
+	    Ca_up_new = -JSR_V_rel/JSR_V_up * tmp_I_tr +
+		tmp_I_up - tmp_I_up_leak;
 
 	    // Calcium rel (20)
-	    chunk.out11[i] = chunk.out5[i] - chunk.out8[i];
-	    chunk.out19[i] = chunk.out11[i] / 
+	    tmp = tmp_I_tr - tmp_I_rel;
+	    Ca_rel_new = tmp / 
 		(1.0 + Csqn_max * Km_Csqn /
-		 ((Km_Csqn + chunk.in19[i]) * (Km_Csqn + chunk.in19[i])));
-	}
-#pragma omp simd private(alpha,beta)
-	for (unsigned int i = 0; i < chunk.size; ++i)
-	{
+		 ((Km_Csqn + Ca_rel) * (Km_Csqn + Ca_rel)));
+
 	    // m
 	    // chunk.in0[i] == v, chunk.in1[i] == x,
 	    // chunk.out1[i] == x_new, chunk.gate0[i] == x_tau
-	    alpha = (chunk.in0[i] == (-47.13)) ?
-		3.2 : (0.32*(chunk.in0[i] + 47.13))/(1.0-exp((-0.1)*(chunk.in0[i] + 47.13)));
-	    beta = 0.08*exp(-chunk.in0[i]/11.0);
-	    chunk.gate0[i] = 1.0/(alpha + beta);
-	    chunk.out1[i] = alpha*chunk.gate0[i];
+	    alpha = (V == (-47.13)) ?
+		3.2 : (0.32*(V + 47.13))/(1.0-exp((-0.1)*(V + 47.13)));
+	    beta = 0.08*exp(-V/11.0);
+	    m_gate = 1.0/(alpha + beta);
+	    m_new = alpha*m_gate;
 
 	    // h
 	    // chunk.in0[i] == v, chunk.in2[i] == x,
 	    // chunk.out2[i] == x_new, chunk.gate1[i] == x_tau
-	    alpha = (chunk.in0[i] >= -40.0) ?
-		0.0 : 0.135*exp(-(chunk.in0[i] + 80.0)/6.8);
-	    beta = (chunk.in0[i] >= -40.0) ?
-		1.0/(0.13*(1.0+exp(-(chunk.in0[i] + 10.66)/11.1)))
-		: 3.56*exp(0.079*chunk.in0[i])+ 310000.0*exp(0.35*chunk.in0[i]);
-	    chunk.gate1[i] = 1.0/(alpha + beta);
-	    chunk.out2[i] = alpha*chunk.gate1[i];
+	    alpha = (V >= -40.0) ?
+		0.0 : 0.135*exp(-(V + 80.0)/6.8);
+	    beta = (V >= -40.0) ?
+		1.0/(0.13*(1.0+exp(-(V + 10.66)/11.1)))
+		: 3.56*exp(0.079*V)+ 310000.0*exp(0.35*V);
+	    h_gate = 1.0/(alpha + beta);
+	    h_new = alpha*h_gate;
 
 	    // j
 	    // chunk.in0[i] == v, chunk.in3[i] == x,
 	    // chunk.out3[i] == x_new, chunk.gate2[i] == x_tau
-	    alpha = (chunk.in0[i] >= -40.0) ?
+	    alpha = (V >= -40.0) ?
 		0.0 :
-		(-127140.0*exp(0.2444*chunk.in0[i])-3.474e-05*exp(-0.04391*chunk.in0[i]))*((chunk.in0[i]+37.78)/(1.0+exp(0.311*(chunk.in0[i]+79.23))));
-	    beta  = (chunk.in0[i] >= -40.0) ?
-		(0.3*exp(-2.535e-07*chunk.in0[i])/(1.0+exp(-0.1*(chunk.in0[i]+32.0))))
-		: 0.1212*exp(-0.01052*chunk.in0[i])/(1.0+exp(-0.1378*(chunk.in0[i]+40.14)));
-	    chunk.gate2[i] = 1.0/(alpha + beta);
-	    chunk.out3[i] = alpha*(chunk.gate2[i]);
+		(-127140.0*exp(0.2444*V)-3.474e-05*exp(-0.04391*V))*((V+37.78)/(1.0+exp(0.311*(V+79.23))));
+	    beta  = (V >= -40.0) ?
+		(0.3*exp(-2.535e-07*V)/(1.0+exp(-0.1*(V+32.0))))
+		: 0.1212*exp(-0.01052*V)/(1.0+exp(-0.1378*(V+40.14)));
+	    j_gate = 1.0/(alpha + beta);
+	    j_new = alpha*(j_gate);
 
 	    // oa
 	    // chunk.in0[i] == v, chunk.in4[i] == x,
 	    // chunk.out4[i] == x_new, chunk.gate3[i] == x_tau
-	    alpha = 0.65/(exp(-(chunk.in0[i]+10.0)/8.5) + exp(-(chunk.in0[i]-30.0)/59.0));
-	    beta  = 0.65/(2.5 + exp((chunk.in0[i]+82.0)/17.0));
-	    chunk.gate3[i] = 1.0/K_Q10/(alpha + beta);
-	    chunk.out4[i] = (1.0/(1.0+exp(-(chunk.in0[i]+20.47)/17.54)));
+	    alpha = 0.65/(exp(-(V+10.0)/8.5) + exp(-(V-30.0)/59.0));
+	    beta  = 0.65/(2.5 + exp((V+82.0)/17.0));
+	    oa_gate = 1.0/K_Q10/(alpha + beta);
+	    oa_new = (1.0/(1.0+exp(-(V+20.47)/17.54)));
 
 	    // oi
 	    // chunk.in0[i] == v, chunk.in5[i] == x,
 	    // chunk.out5[i] == x_new, chunk.gate4[i] == x_tau
-	    alpha = 1.0/(18.53 + exp((chunk.in0[i]+113.7)/10.95));
-	    beta  = 1.0/(35.56 + exp(-(chunk.in0[i]+1.26)/7.44));
-	    chunk.gate4[i] = 1.0/K_Q10/(alpha + beta);
-	    chunk.out5[i] = (1.0/(1.0+exp((chunk.in0[i]+43.1)/5.3)));
+	    alpha = 1.0/(18.53 + exp((V+113.7)/10.95));
+	    beta  = 1.0/(35.56 + exp(-(V+1.26)/7.44));
+	    oi_gate = 1.0/K_Q10/(alpha + beta);
+	    oi_new = (1.0/(1.0+exp((V+43.1)/5.3)));
 
 	    // ua
 	    // chunk.in0[i] == v, chunk.in6[i] == x,
 	    // chunk.out6[i] == x_new, chunk.gate5[i] == x_tau
-	    alpha = 0.65/(exp(-(chunk.in0[i]+10.0)/8.5)+exp(-(chunk.in0[i]-30.0)/59.0));
-	    beta  = 0.65/(2.5+exp((chunk.in0[i]+82.0)/17.0));
-	    chunk.gate5[i] = 1.0/K_Q10/(alpha + beta);
-	    chunk.out6[i] = 1.0/(1.0+exp(-(chunk.in0[i]+30.3)/9.6));
+	    alpha = 0.65/(exp(-(V+10.0)/8.5)+exp(-(V-30.0)/59.0));
+	    beta  = 0.65/(2.5+exp((V+82.0)/17.0));
+	    ua_gate = 1.0/K_Q10/(alpha + beta);
+	    ua_new = 1.0/(1.0+exp(-(V+30.3)/9.6));
 
 	    // ui
 	    // chunk.in0[i] == v, chunk.in7[i] == x,
 	    // chunk.out7[i] == x_new, chunk.gate6[i] == x_tau
-	    alpha = 1.0/(21.0 + exp(-(chunk.in0[i]-185.0)/28.0));
-	    beta  = exp((chunk.in0[i]-158.0)/16.0);
-	    chunk.gate6[i] = 1.0/K_Q10/(alpha + beta);
-	    chunk.out7[i] = 1.0/(1.0+exp((chunk.in0[i]-99.45)/27.48));
+	    alpha = 1.0/(21.0 + exp(-(V-185.0)/28.0));
+	    beta  = exp((V-158.0)/16.0);
+	    ui_gate = 1.0/K_Q10/(alpha + beta);
+	    ui_new = 1.0/(1.0+exp((V-99.45)/27.48));
 
 	    // xr
 	    // chunk.in0[i] == v, chunk.in8[i] == x,
 	    // chunk.out8[i] == x_new, chunk.gate7[i] == x_tau
-	    alpha = 0.0003*(chunk.in0[i]+14.1)/(1-exp(-(chunk.in0[i]+14.1)/5.0));
-	    beta  = 7.3898e-5*(chunk.in0[i]-3.3328)/(exp((chunk.in0[i]-3.3328)/5.1237)-1.0);
-	    chunk.gate7[i] = 1.0/(alpha + beta);
-	    chunk.out8[i] = 1.0/(1+exp(-(chunk.in0[i]+14.1)/6.5));
+	    alpha = 0.0003*(V+14.1)/(1-exp(-(V+14.1)/5.0));
+	    beta  = 7.3898e-5*(V-3.3328)/(exp((V-3.3328)/5.1237)-1.0);
+	    xr_gate = 1.0/(alpha + beta);
+	    xr_new = 1.0/(1+exp(-(V+14.1)/6.5));
 
 	    // xs
 	    // chunk.in0[i] == v, chunk.in9[i] == x,
 	    // chunk.out9[i] == x_new, chunk.gate8[i] == x_tau
-	    alpha = 4e-5*(chunk.in0[i]-19.9)/(1.0-exp(-(chunk.in0[i]-19.9)/17.0));
-	    beta  = 3.5e-5*(chunk.in0[i]-19.9)/(exp((chunk.in0[i]-19.9)/9.0)-1.0);
-	    chunk.gate8[i] = 0.5/(alpha + beta);
-	    chunk.out9[i] = 1.0/sqrt(1.0+exp(-(chunk.in0[i]-19.9)/12.7));
-	}
-	PRAGMA_VECTORIZE_IVDEP
-	for (unsigned int i = 0; i < chunk.size; ++i)
-	{
+	    alpha = 4e-5*(V-19.9)/(1.0-exp(-(V-19.9)/17.0));
+	    beta  = 3.5e-5*(V-19.9)/(exp((V-19.9)/9.0)-1.0);
+	    xs_gate = 0.5/(alpha + beta);
+	    xs_new = 1.0/sqrt(1.0+exp(-(V-19.9)/12.7));
+
 	    // d
 	    // chunk.in0[i] == v, chunk.in10[i] == x,
 	    // chunk.out10[i] == x_new, chunk.gate9[i] == x_tau
-	    chunk.gate9[i] = (1-exp(-(chunk.in0[i]+10.0)/6.24))/(0.035*(chunk.in0[i]+10.0)*(1+exp(-(chunk.in0[i]+10.0)/6.24)));
-	    chunk.out10[i] = 1.0/(1.0 + exp(-(chunk.in0[i]+10)/8.0));
+	    d_gate = (1-exp(-(V+10.0)/6.24))/(0.035*(V+10.0)*(1+exp(-(V+10.0)/6.24)));
+	    d_new = 1.0/(1.0 + exp(-(V+10)/8.0));
 
 	    // f
 	    // chunk.in0[i] == v, chunk.in11[i] == x,
 	    // chunk.out11[i] == x_new, chunk.gate10[i] == x_tau
-	    chunk.gate10[i] = 9.0/(0.0197*exp(-0.0337*0.0337*(chunk.in0[i]+10.0)*(chunk.in0[i]+10.0))+0.02);
-	    chunk.out11[i] = exp((-(chunk.in0[i] + 28.0)) / 6.9) / (1.0 + exp((-(chunk.in0[i] + 28.0)) / 6.9));
+	    f_gate = 9.0/(0.0197*exp(-0.0337*0.0337*(V+10.0)*(V+10.0))+0.02);
+	    f_new = exp((-(V + 28.0)) / 6.9) / (1.0 + exp((-(V + 28.0)) / 6.9));
 
 	    // f_Ca
 	    // chunk.in0[i] == v, chunk.in12[i] == x,
 	    // chunk.out12[i] == x_new, chunk.gate11[i] == x_tau
-	    chunk.gate11[i]  = 2.0;
-	    chunk.out12[i] = 1.0/(1.0+chunk.in17[i]/0.00035);
+	    f_Ca_gate  = 2.0;
+	    f_Ca_new = 1.0/(1.0+Ca_i/0.00035);
 
 	    // outarray[15] == tmp_Fn
-	    chunk.out15[i] = 0.5*5e-13*chunk.out2[i]/F + (-0.2*5e-13)*chunk.out3[i]/F;
-	    chunk.out15[i] = 1e-12*JSR_V_rel*chunk.out8[i] - chunk.out15[i];
+	    tmp_Fn = 0.5*5e-13*tmp_I_Ca_L/F + (-0.2*5e-13)*tmp_I_Na_Ca/F;
+	    tmp_Fn = 1e-12*JSR_V_rel*tmp_I_rel - tmp_Fn;
 
 	    // u
 	    // chunk.out15[i] == v, chunk.in13[i] == x,
 	    // chunk.out13[i] == x_new, chunk.gate12[i] == x_tau
-	    chunk.gate12[i]  = 8.0;
-	    chunk.out13[i] = 1.0/(1.0 + exp(-(chunk.out15[i] - 3.4175e-13)/1.367e-15));
+	    u_gate  = 8.0;
+	    u_new = 1.0/(1.0 + exp(-(tmp_Fn - 3.4175e-13)/1.367e-15));
 
 	    // v
 	    // chunk.out15[i] == v, chunk.in14[i] == x,
 	    // chunk.out14[i] == x_new, chunk.gate13[i] == x_tau
-	    chunk.gate13[i]  = 1.91 + 2.09/(1.0+exp(-(chunk.out15[i] - 3.4175e-13)/13.67e-16));
-	    chunk.out14[i] = 1.0 - 1.0/(1.0 + exp(-(chunk.out15[i] - 6.835e-14)/13.67e-16));
+	    v_gate  = 1.91 + 2.09/(1.0+exp(-(tmp_Fn - 3.4175e-13)/13.67e-16));
+	    v_new = 1.0 - 1.0/(1.0 + exp(-(tmp_Fn - 6.835e-14)/13.67e-16));
 
 	    // w
 	    // chunk.in0[i] == v, chunk.in15[i] == x,
 	    // chunk.out15[i] == x_new, chunk.gate14[i] == x_tau
-	    chunk.gate14[i] = 6.0*(1.0-exp(-(chunk.in0[i]-7.9)/5.0))/(1.0+0.3*exp(-(chunk.in0[i]-7.9)/5.0))/(chunk.in0[i]-7.9);
-	    chunk.out15[i] = 1.0 - 1.0/(1.0 + exp(-(chunk.in0[i] - 40.0)/17.0));
+	    w_gate = 6.0*(1.0-exp(-(V-7.9)/5.0))/(1.0+0.3*exp(-(V-7.9)/5.0))/(V-7.9);
+	    w_new = 1.0 - 1.0/(1.0 + exp(-(V - 40.0)/17.0));
 	}
     }
 }
@@ -353,6 +435,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 	for (auto& chunk : m_data)
 	{
 	    PRAGMA_VECTORIZE_IVDEP
+	    PRAGMA_VECTORIZE_ALIGNED
 	    for (unsigned int j = 0; j < chunk.size; ++j)
 	    {
 		// Forward Euler on voltages
@@ -392,6 +475,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
     for (auto& chunk : m_data)
     {
 	PRAGMA_VECTORIZE_IVDEP
+	PRAGMA_VECTORIZE_ALIGNED
 	for (unsigned int j = 0; j < chunk.size; ++j)
 	{
 	    // Forward Euler on concentrations
