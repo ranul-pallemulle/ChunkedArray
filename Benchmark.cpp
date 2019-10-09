@@ -42,5 +42,5 @@ void BM_TimeIntegrate(benchmark::State& state)
     }
 }
 
-BENCHMARK(BM_TimeIntegrate)->RangeMultiplier(2)->Range(1 << 7, 1 << 20);
+BENCHMARK(BM_TimeIntegrate)->RangeMultiplier(2)->Range(1 << 7, 1 << 20)->UseRealTime();
 BENCHMARK_MAIN();

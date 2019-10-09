@@ -91,6 +91,7 @@ namespace Nektar
 	ChunkUnit* end() {return m_data + m_num_chunks;}
 	void fromInArray(const Array<OneD, double>& inarray);
 	void toOutArray(Array<OneD, double>& outarray);
+	size_t num_elements() {return m_num_chunks;}
 	// int get_chunk_length() {return chunk_len;}
     private:
 	void allocate_aligned_memory(size_t size, size_t alignment);

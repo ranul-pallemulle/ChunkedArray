@@ -1,7 +1,7 @@
-CC=clang++
+CC=g++
 OPT=-O3
 STD=c++11
-EXTRA_FLAGS=-g -save-temps -fverbose-asm -Wall -Wextra -Werror -pedantic
+EXTRA_FLAGS=-g -save-temps -fverbose-asm -Wall -Wextra -Werror -pedantic -fno-omit-frame-pointer
 CDEPS=-I/home/ranul/Downloads/benchmark/include
 ifeq "$(CC)" "icpc"
 LDEPS=-lbenchmark -lpthread -mkl
@@ -22,7 +22,10 @@ endif
 # VEC=
 # VEC=-xHost
 
-all: chunked_interchanged_bm chunked_bm original_bm original_bm_unmod
+all: chunked_interchanged_multithread_bm chunked_interchanged_bm chunked_bm original_bm original_bm_unmod
+
+chunked_interchanged_multithread_bm : Benchmark.cpp ChunkedArrayInterchangeMultithreadedTest.cpp Vmath.o
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
 
 chunked_interchanged_bm : Benchmark.cpp ChunkedArrayInterchangeTest.cpp Vmath.o
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
@@ -41,5 +44,5 @@ Vmath.o : Vmath.cpp
 
 .PHONY : clean all
 clean :
-	rm chunked_interchanged_bm chunked_bm original_bm original_bm_unmod Benchmark.o Benchmark.s Benchmark.i Benchmark.ii Benchmark.bc Benchmark.opt.yaml ChunkedArrayTest.o ChunkedArrayTest.s ChunkedArrayTest.i ChunkedArrayTest.ii ChunkedArrayTest.bc ChunkedArrayTest.opt.yaml ChunkedArrayInterchangeTest.o ChunkedArrayInterchangeTest.s ChunkedArrayInterchangeTest.i ChunkedArrayInterchangeTest.ii ChunkedArrayInterchangeTest.bc ChunkedArrayInterchangeTest.opt.yaml OriginalTest.o OriginalTest.s OriginalTest.i OriginalTest.ii OriginalTest.bc OriginalTest.opt.yaml Vmath.o Vmath.s Vmath.i Vmath.ii Vmath.bc Vmath.opt.yaml *.optrpt *objdump*
+	rm chunked_interchanged_multithread_bm chunked_interchanged_bm chunked_bm original_bm original_bm_unmod Benchmark.o Benchmark.s Benchmark.i Benchmark.ii Benchmark.bc Benchmark.opt.yaml ChunkedArrayTest.o ChunkedArrayTest.s ChunkedArrayTest.i ChunkedArrayTest.ii ChunkedArrayTest.bc ChunkedArrayTest.opt.yaml ChunkedArrayInterchangeTest.o ChunkedArrayInterchangeTest.s ChunkedArrayInterchangeTest.i ChunkedArrayInterchangeTest.ii ChunkedArrayInterchangeTest.bc ChunkedArrayInterchangeTest.opt.yaml ChunkedArrayInterchangeMultithreadedTest.o ChunkedArrayInterchangeMultithreadedTest.s ChunkedArrayInterchangeMultithreadedTest.i ChunkedArrayInterchangeMultithreadedTest.ii ChunkedArrayInterchangeMultithreadedTest.bc ChunkedArrayInterchangeMultithreadedTest.opt.yaml OriginalTest.o OriginalTest.s OriginalTest.i OriginalTest.ii OriginalTest.bc OriginalTest.opt.yaml Vmath.o Vmath.s Vmath.i Vmath.ii Vmath.bc Vmath.opt.yaml *.optrpt *objdump*
 
