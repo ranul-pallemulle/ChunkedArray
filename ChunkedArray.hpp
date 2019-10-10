@@ -95,8 +95,8 @@ namespace Nektar
 	ChunkUnit& operator[](unsigned int i) const {return m_data[i];}
 	ChunkUnit* begin() {return m_data;}
 	ChunkUnit* end() {return m_data + m_num_chunks;}
-	void fromInArray(const Array<OneD, double>& inarray);
-	void toOutArray(Array<OneD, double>& outarray);
+	static void fromInArray(const Array<OneD, double>& inarray, ChunkUnit& chunk, int chunk_num);
+	static void toOutArray(const ChunkUnit& chunk, Array<OneD, double>& inarray, int chunk_num);
 	size_t num_elements() {return m_num_chunks;}
 	// int get_chunk_length() {return chunk_len;}
     private:
@@ -223,47 +223,29 @@ namespace Nektar
 	return *this;
     }
 
-    // Copy input voltage from SharedArray
+    // Copy input voltage from SharedArray (single chunk)
     template<typename DataType, int chunk_len, int pad>
-    void ChunkArray<DataType, chunk_len, pad>::fromInArray(
-			       const Array<OneD, double>& inarray)
+    void ChunkArray<DataType, chunk_len, pad>::fromInArray(const Array<OneD, double>& inarray,
+							   ChunkUnit& chunk,
+							   int chunk_num)
     {
-	int n_iter = m_remainder > 0 ? m_num_chunks-1 : m_num_chunks;
-	for (int i = 0; i < n_iter; ++i)
-	{
-	    PRAGMA_VECTORIZE_IVDEP
-	    for (int j = 0; j < chunk_len; ++j)
-	    {
-		m_data[i].in0[j] = inarray[i*chunk_len + j];
-	    }
-	}
 	PRAGMA_VECTORIZE_IVDEP
-	for (unsigned int j = 0; j < m_remainder; ++j)
+	for (unsigned int i = 0; i < chunk.size; ++i)
 	{
-	    m_data[m_num_chunks - 1].in0[j] = inarray[(m_num_chunks-1)*chunk_len + j];
+	    chunk.in0[i] = inarray[chunk_num * chunk_len + i];
 	}
     }
 
-
-    // Copy output voltage into SharedArray
+    // Copy output voltage into SharedArray (single chunk)
     template<typename DataType, int chunk_len, int pad>
-    void ChunkArray<DataType, chunk_len, pad>::toOutArray(
-			             Array<OneD, double>& outarray)
+    void ChunkArray<DataType, chunk_len, pad>::toOutArray(const ChunkUnit& chunk,
+							  Array<OneD, double>& outarray,
+							  int chunk_num)
     {
-	int n_iter = m_remainder > 0 ? m_num_chunks-1 : m_num_chunks;
-	for (int i = 0; i < n_iter; ++i)
-	{
-	    PRAGMA_VECTORIZE_IVDEP
-	    for (int j = 0; j < chunk_len; ++j)
-	    {
-		outarray[i*chunk_len + j] = m_data[i].out0[j];
-	    }
-	}
 	PRAGMA_VECTORIZE_IVDEP
-	for (unsigned int j = 0; j < m_remainder; ++j)
+	for (unsigned int i = 0; i < chunk.size; ++i)
 	{
-	    outarray[(m_num_chunks-1) * chunk_len + j] = \
-		m_data[m_num_chunks-1].out0[j];
+	    outarray[chunk_num * chunk_len + i] = chunk.out0[i];
 	}
     }
 

@@ -421,14 +421,16 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 		         Array<OneD,       Array<OneD, NekDouble> >& outarray,
 		   const NekDouble time)
 {
-    // Copy in voltage
-    m_data.fromInArray(inarray[0]);
     NekDouble delta_t = (time - lastTime)/substeps;
-
+    
     #pragma omp parallel for
     for (unsigned int k = 0; k < m_data.num_elements(); ++k)
     {
 	NekChunkArray::ChunkUnit& chunk = m_data[k];
+
+	// Copy in voltage
+	NekChunkArray::fromInArray(inarray[0], chunk, k);
+	// Substep
 	for (unsigned int i = 0; i < substeps - 1; ++i)
 	{
 	    v_Update(chunk);
@@ -496,8 +498,8 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_GATE_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
 	}
+	// Copy out new voltage
+	NekChunkArray::toOutArray(chunk, outarray[0], k);
     }
-    // Copy out new voltage
-    m_data.toOutArray(outarray[0]);
     lastTime = time;
 }
