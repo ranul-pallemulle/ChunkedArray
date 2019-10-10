@@ -2,7 +2,7 @@
 #include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
-#include "CellModelConstants.hpp"
+#include "CellModelConstants_CRM98.hpp"
 
 int nq;
 unsigned int n_var;

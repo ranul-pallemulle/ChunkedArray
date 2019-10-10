@@ -2,7 +2,7 @@
 #include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
-#include "CellModelConstants.hpp"
+#include "CellModelConstants_CRM98.hpp"
 
 #define NUM_IN_OUT_VARS 21
 #define NUM_GATE_VARS 15
@@ -422,13 +422,15 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 		   const NekDouble time)
 {
     NekDouble delta_t = (time - lastTime)/substeps;
+    
+    #pragma omp parallel for
     for (unsigned int k = 0; k < m_data.num_elements(); ++k)
     {
 	NekChunkArray::ChunkUnit& chunk = m_data[k];
-	
+
 	// Copy in voltage
 	NekChunkArray::fromInArray(inarray[0], chunk, k);
-	// Substep 
+	// Substep
 	for (unsigned int i = 0; i < substeps - 1; ++i)
 	{
 	    v_Update(chunk);
