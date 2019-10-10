@@ -64,27 +64,27 @@ void v_Update(NekChunkArray::ChunkUnit& chunk)
     PRAGMA_VECTORIZE_ALIGNED
     for (unsigned int i = 0; i < chunk.size; ++i)
     {
-	NekDouble& V = chunk.in0[i];
-	NekDouble& m = chunk.in1[i];
-	NekDouble& h = chunk.in2[i];
-	NekDouble& j = chunk.in3[i];
-	NekDouble& o_a = chunk.in4[i];
-	NekDouble& o_i = chunk.in5[i];
-	NekDouble& u_a = chunk.in6[i];
-	NekDouble& u_i = chunk.in7[i];
-	NekDouble& x_r = chunk.in8[i];
-	NekDouble& x_s = chunk.in9[i];
-	NekDouble& d = chunk.in10[i];
-	NekDouble& f = chunk.in11[i];
-	NekDouble& f_Ca = chunk.in12[i];
-	NekDouble& u = chunk.in13[i];
-	NekDouble& v = chunk.in14[i];
-	NekDouble& w = chunk.in15[i];
-	NekDouble& Na_i = chunk.in16[i];
-	NekDouble& Ca_i = chunk.in17[i];
-	NekDouble& K_i = chunk.in18[i];
-	NekDouble& Ca_rel = chunk.in19[i];
-	NekDouble& Ca_up = chunk.in20[i];
+	const NekDouble& V = chunk.in0[i];
+	const NekDouble& m = chunk.in1[i];
+	const NekDouble& h = chunk.in2[i];
+	const NekDouble& j = chunk.in3[i];
+	const NekDouble& o_a = chunk.in4[i];
+	const NekDouble& o_i = chunk.in5[i];
+	const NekDouble& u_a = chunk.in6[i];
+	const NekDouble& u_i = chunk.in7[i];
+	const NekDouble& x_r = chunk.in8[i];
+	const NekDouble& x_s = chunk.in9[i];
+	const NekDouble& d = chunk.in10[i];
+	const NekDouble& f = chunk.in11[i];
+	const NekDouble& f_Ca = chunk.in12[i];
+	const NekDouble& u = chunk.in13[i];
+	const NekDouble& v = chunk.in14[i];
+	const NekDouble& w = chunk.in15[i];
+	const NekDouble& Na_i = chunk.in16[i];
+	const NekDouble& Ca_i = chunk.in17[i];
+	const NekDouble& K_i = chunk.in18[i];
+	const NekDouble& Ca_rel = chunk.in19[i];
+	const NekDouble& Ca_up = chunk.in20[i];
 
 	NekDouble& V_new = chunk.out0[i];
 	NekDouble& m_new = chunk.out1[i];
@@ -422,13 +422,17 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 		   const NekDouble time)
 {
     NekDouble delta_t = (time - lastTime)/substeps;
+
+    #ifdef MULTITHREAD
+    #pragma omp parallel for
+    #endif
     for (unsigned int k = 0; k < m_data.num_elements(); ++k)
     {
 	NekChunkArray::ChunkUnit& chunk = m_data[k];
 	
 	// Copy in voltage
 	NekChunkArray::fromInArray(inarray[0], chunk, k);
-	// Substep 
+	// Substep
 	for (unsigned int i = 0; i < substeps - 1; ++i)
 	{
 	    v_Update(chunk);

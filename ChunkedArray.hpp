@@ -230,6 +230,9 @@ namespace Nektar
 							   int chunk_num)
     {
 	PRAGMA_VECTORIZE_IVDEP
+#if defined (__INTEL_COMPILER)
+#pragma code_align 32
+#endif
 	for (unsigned int i = 0; i < chunk.size; ++i)
 	{
 	    chunk.in0[i] = inarray[chunk_num * chunk_len + i];
