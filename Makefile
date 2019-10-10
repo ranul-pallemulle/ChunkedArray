@@ -10,17 +10,17 @@ LDEPS=-lbenchmark -lpthread -lmvec
 endif
 
 ifeq "$(CC)" "g++"
-VEC=-mavx -ftree-vectorize -fopt-info-vec-optimized -fopenmp -ffast-math
+VEC=-march=sandybridge -ftree-vectorize -fopenmp -ffast-math
 endif
 ifeq "$(CC)" "clang++"
-VEC=-mavx -ftree-vectorize -fopenmp -ffast-math -fsave-optimization-record -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -fno-math-errno
+VEC=-march=sandybridge -ftree-vectorize -fopenmp -ffast-math -fsave-optimization-record -Rpass=loop-vectorize -Rpass-missed=loop-vectorize -fno-math-errno
 endif
 ifeq "$(CC)" "icpc"
 VEC=-xHost -qopenmp -qopt-report5 -no-prec-div
 endif
-# VEC=-fno-tree-vectorize
+# VEC=-march=sandybridge -fno-tree-vectorize -fopenmp -ffast-math
+# VEC=-xHost -qopenmp -qopt-report5 -no-prec-div -no-vec
 # VEC=
-# VEC=-xHost
 
 all: chunked_interchanged_multithread_bm chunked_interchanged_bm chunked_bm original_bm original_bm_unmod
 
