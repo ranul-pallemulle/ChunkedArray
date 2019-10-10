@@ -1,6 +1,8 @@
 #ifndef MEMORYMANAGER_HPP
 #define MEMORYMANAGER_HPP
 
+#include <memory>
+
 template<typename DataType>
 class MemoryManager
 {

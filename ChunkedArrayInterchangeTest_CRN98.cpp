@@ -2,7 +2,7 @@
 #include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
-#include "CellModelConstants_CRM98.hpp"
+#include "CellModelConstants_CRN98.hpp"
 
 #define NUM_IN_OUT_VARS 21
 #define NUM_GATE_VARS 15
@@ -21,7 +21,6 @@ NekChunkArray m_data;
 
 extern NekDouble lastTime;
 extern unsigned int substeps;
-extern NekDouble finTime;
 
 void init_test(int n)
 {

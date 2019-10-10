@@ -2,7 +2,7 @@
 #include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
-#include "CellModelConstants_CRM98.hpp"
+#include "CellModelConstants_CRN98.hpp"
 
 int nq;
 unsigned int n_var;
@@ -14,7 +14,6 @@ Array<OneD, Array<OneD, NekDouble> > gates_tau;
 
 extern NekDouble lastTime;
 extern unsigned int substeps;
-extern NekDouble finTime;
 
 void init_test(int n)
 {

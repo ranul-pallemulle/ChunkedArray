@@ -20,7 +20,6 @@ NekChunkArray m_data;
 
 extern NekDouble lastTime;
 extern unsigned int substeps;
-extern NekDouble finTime;
 
 void init_test(int n)
 {

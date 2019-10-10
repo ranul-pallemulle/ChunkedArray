@@ -1,6 +1,8 @@
 #ifndef ARRAYPOLICIES_HPP
 #define ARRAYPOLICIES_HPP
 
+#include <memory>
+
 template<typename ObjectType, typename enabled = void>
 class ArrayInitializationPolicy;
 
