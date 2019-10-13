@@ -42,13 +42,19 @@ static_assert(false, "Number of input and output variables for cell model not "
                      "defined. Cannot create ChunkUnit data structure.");
 #endif // NUM_IN_OUT_VARS
 
+#ifdef HAS_GATES
 #ifndef NUM_GATE_VARS
 static_assert(false, "Number of gating variables for cell model not defined. "
                      "Cannot create ChunkUnit data structure.");
 #endif // NUM_GATE_VARS
+#endif // HAS_GATES
 
 #ifdef HAS_CONCENTRATIONS
+#ifdef HAS_GATES
 #define CONC_START_IDX BOOST_PP_ADD(NUM_GATE_VARS, 1)
+#else
+#define CONC_START_IDX 1
+#endif
 #define CONC_END_IDX BOOST_PP_SUB(NUM_IN_OUT_VARS, 1)
 #endif
 
@@ -75,10 +81,13 @@ public:
 #define BOOST_PP_LOCAL_MACRO(n) GEN_OUTVAR(n)
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
+	
+#ifdef HAS_GATES	
         // generate gating variables
 #define BOOST_PP_LOCAL_MACRO(n) GEN_GATEVAR(n)
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_GATE_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
+#endif // HAS_GATES
     };
 
     ChunkArray() = default;
@@ -89,27 +98,15 @@ public:
     ~ChunkArray();
     ChunkArray &operator=(const ChunkArray &rhs);
     ChunkArray &operator=(ChunkArray &&rhs);
-    ChunkUnit &operator[](unsigned int i) const
-    {
-        return m_data[i];
-    }
-    ChunkUnit *begin()
-    {
-        return m_data;
-    }
-    ChunkUnit *end()
-    {
-        return m_data + m_num_chunks;
-    }
+    ChunkUnit &operator[](unsigned int i) const {return m_data[i];}
+    ChunkUnit *begin() {return m_data;}
+    ChunkUnit *end() {return m_data + m_num_chunks;}
     static void fromInArray(const Array<OneD, double> &inarray,
                             ChunkUnit &chunk, int chunk_num);
     static void toOutArray(const ChunkUnit &chunk, Array<OneD, double> &inarray,
                            int chunk_num);
-    size_t num_elements()
-    {
-        return m_num_chunks;
-    }
-    // int get_chunk_length() {return chunk_len;}
+    size_t num_elements() {return m_num_chunks;}
+
 private:
     void allocate_aligned_memory(size_t size, size_t alignment);
     void release_aligned_memory();

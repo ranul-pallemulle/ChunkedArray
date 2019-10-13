@@ -61,12 +61,15 @@ void v_Update(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
     NekDouble *w_tau = &gates_tau[1][0];
 
     NekDouble J_fi, J_so, J_si, h1, h2, h3, alpha, beta;
+    NekDouble V;
 
     for (i = 0; i < n; ++i) {
 
-	h1 = (*u < u_c) ? 0.0 : 1.0;
-	h2 = (*u < u_v) ? 0.0 : 1.0;
-	h3 = (*u < u_r) ? 0.0 : 1.0;
+	V = (*u - V_0)/(V_fi - V_0);
+
+	h1 = (V < u_c) ? 0.0 : 1.0;
+	h2 = (V < u_v) ? 0.0 : 1.0;
+	h3 = (V < u_r) ? 0.0 : 1.0;
 
 	alpha = (1 - h1)/tau_w_minus;
 	beta = h1/tau_w_plus;
@@ -78,64 +81,15 @@ void v_Update(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 	*v_tau = 1.0/(alpha + beta);
 	*v_new = alpha * (*v_tau);
 
-	J_fi = -(*v)*h1*(1 - *u)*(*u - u_c)/tau_d;
+	J_fi = -(*v)*h1*(1 - V)*(V - u_c)/tau_d;
 
-	J_so = (*u)*(1-h3)*(1-k2*(*v))/tau_0 + h3/tau_r;
+	J_so = V*(1-h3)*(1-k2*(*v))/tau_0 + h3/tau_r;
 
-	J_si = -(*w)*(1 + tanh(k1*(*u - u_csi)))/(2.0*tau_si);
+	J_si = -(*w)*(1 + tanh(k1*(V - u_csi)))/(2.0*tau_si);
 
 	*u_new = -J_fi - J_so - J_si;
+	*u_new *= C_m*(V_fi - V_0);
 
 	++u, ++v, ++w, ++u_new, ++v_new, ++w_new, ++v_tau, ++w_tau;
     }
 }
-
-
-void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
-		         Array<OneD,       Array<OneD, NekDouble> >& outarray,
-		   const NekDouble time)
-{
-    Vmath::Vcopy(nq, inarray[0], 1, cellSol[0], 1);
-    NekDouble delta_t = (time - lastTime)/substeps;
-
-    for (unsigned int i = 0; i < substeps - 1; ++i)
-    {
-	v_Update(cellSol, wsp, time);
-	Vmath::Svtvp(nq, delta_t, wsp[0], 1, cellSol[0], 1, cellSol[0], 1);
-	for (unsigned int j = 0; j < concentrations.size(); ++j)
-	{
-	    Vmath::Svtvp(nq, delta_t, wsp[concentrations[j]], 1,
-			 cellSol[concentrations[j]], 1, cellSol[concentrations[j]], 1);
-	}
-
-	for (unsigned int j = 0; j < gates.size(); ++j)
-	{
-	    Vmath::Sdiv(nq, -delta_t, gates_tau[j], 1, gates_tau[j], 1);
-	    Vmath::Vexp(nq, gates_tau[j], 1, gates_tau[j], 1);
-	    Vmath::Vsub(nq, cellSol[gates[j]], 1, wsp[gates[j]], 1, cellSol[gates[j]], 1);
-	    Vmath::Vvtvp(nq, cellSol[gates[j]], 1, gates_tau[j], 1,
-			 wsp[gates[j]], 1, cellSol[gates[j]], 1);
-	}
-    }
-    v_Update(cellSol, wsp, time);
-
-    Vmath::Vcopy(nq, wsp[0], 1, outarray[0], 1);
-
-    for (unsigned int j = 0; j < concentrations.size(); ++j)
-    {
-	Vmath::Svtvp(nq, delta_t, wsp[concentrations[j]], 1,
-		     cellSol[concentrations[j]], 1, cellSol[concentrations[j]], 1);
-    }
-
-
-    for (unsigned int j = 0; j < gates.size(); ++j)
-    {
-	Vmath::Sdiv(nq, -delta_t, gates_tau[j], 1, gates_tau[j], 1);
-	Vmath::Vexp(nq, gates_tau[j], 1, gates_tau[j], 1);
-	Vmath::Vsub(nq, cellSol[gates[j]], 1, wsp[gates[j]], 1, cellSol[gates[j]], 1);
-	Vmath::Vvtvp(nq, cellSol[gates[j]], 1, gates_tau[j], 1,
-		     wsp[gates[j]], 1, cellSol[gates[j]], 1);
-    }
-    lastTime = time;
-}
-

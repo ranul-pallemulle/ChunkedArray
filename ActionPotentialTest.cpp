@@ -24,6 +24,8 @@ extern Array<OneD, Array<OneD, NekDouble> > vWsp;
 extern unsigned int substeps;
 extern NekDouble timeStep;
 extern NekDouble finTime;
+extern NekDouble stimStrength;
+extern NekDouble stimSteps;
 NekDouble lastTime = 0;
 NekDouble vTime = 0.0;
 unsigned int nSteps = finTime/timeStep;
@@ -48,9 +50,9 @@ int main(int argc, char** argv)
     {
 	auto start = hr_clock::now();
 	TimeIntegrate(vSol, vWsp, vTime);
-	if (i < 100)
+	if (i < stimSteps)
 	{
-	    vWsp[0][0] = 50;
+	    vWsp[0][0] = stimStrength;
 	}
 
 	Vmath::Svtvp(num_points, timeStep, vWsp[0], 1, vSol[0], 1, vSol[0], 1);

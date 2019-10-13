@@ -46,6 +46,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 #include BOOST_PP_LOCAL_ITERATE()
 #endif
 		// Rush-Larsen integration on gating variables
+#ifdef HAS_GATES		
 #define BOOST_PP_LOCAL_MACRO(n)					\
 		chunk.gate##n[j] = -delta_t / chunk.gate##n[j]; \
 								\
@@ -62,6 +63,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 		
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_GATE_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
+#endif		
 	    }
 	}
 	
@@ -79,6 +81,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 #include BOOST_PP_LOCAL_ITERATE()
 #endif
 	    // Rush-Larsen integration on gating variables
+#ifdef HAS_GATES	    
 #define BOOST_PP_LOCAL_MACRO(n)					\
 	    chunk.gate##n[j] = -delta_t / chunk.gate##n[j];	\
 								\
@@ -95,6 +98,7 @@ void TimeIntegrate(const Array<OneD, const Array<OneD, NekDouble> >& inarray,
 		
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_GATE_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
+#endif	    
 	}
 	// Copy out new voltage
 	NekChunkArray::toOutArray(chunk, outarray[0], k);
