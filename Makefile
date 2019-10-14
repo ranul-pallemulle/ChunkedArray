@@ -82,6 +82,16 @@ PANDIT_BM=PGD03_original_withvecflags_bm \
 PANDIT_AP=PGD03_original_withvecflags_ap \
 	 PGD03_original_ap
 
+TEN_BM=TT06_chunked_interchanged_multithreaded_bm \
+       TT06_chunked_interchanged_bm \
+       TT06_original_withvecflags_bm \
+       TT06_original_bm
+
+TEN_AP=TT06_chunked_interchanged_multithreaded_ap \
+       TT06_chunked_interchanged_ap \
+       TT06_original_withvecflags_ap \
+       TT06_original_ap
+
 FK_DEFS=-DNUM_IN_OUT_VARS=3 -DHAS_GATES -DNUM_GATE_VARS=2
 CRN98_DEFS=-DNUM_IN_OUT_VARS=21 -DHAS_GATES -DNUM_GATE_VARS=15 -DHAS_CONCENTRATIONS
 AP_DEFS=-DNUM_IN_OUT_VARS=2 -DHAS_CONCENTRATIONS
@@ -89,8 +99,9 @@ FN_DEFS=-DNUM_IN_OUT_VARS=2 -DHAS_CONCENTRATIONS
 F02_DEFS=-DNUM_IN_OUT_VARS=13 -DHAS_GATES -DNUM_GATE_VARS=10 -DHAS_CONCENTRATIONS
 LR91_DEFS=-DNUM_IN_OUT_VARS=8 -DHAS_GATES -DNUM_GATE_VARS=6 -DHAS_CONCENTRATIONS
 PGD03_DEFS=-DNUM_IN_OUT_VARS=27
+TT06_DEFS=-DNUM_IN_OUT_VARS=19 -DHAS_GATES -DNUM_GATE_VARS=12 -DHAS_CONCENTRATIONS
 
-all: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP)
+all: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP) $(TEN_BM) $(TEN_AP)
 
 courtemanche: $(COURTEMANCHE_BM) $(COURTEMANCHE_AP)
 
@@ -106,9 +117,11 @@ luo: $(LUO_BM) $(LUO_AP)
 
 pandit: $(PANDIT_BM) $(PANDIT_AP)
 
-actionpotential: $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_AP) $(FOX_AP) $(LUO_AP) $(PANDIT_AP)
+ten: $(TEN_BM) $(TEN_AP)
 
-benchmark: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(ALIEVPANFILOV_BM) $(FITZHUGHNAGUMO_BM) $(FOX_BM) $(LUO_BM) $(PANDIT_BM)
+actionpotential: $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_AP) $(FOX_AP) $(LUO_AP) $(PANDIT_AP) $(TEN_AP)
+
+benchmark: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(ALIEVPANFILOV_BM) $(FITZHUGHNAGUMO_BM) $(FOX_BM) $(LUO_BM) $(PANDIT_BM) $(TEN_BM)
 
 
 CRN98_chunked_interchanged_multithread_bm : Benchmark.o Globals_CRN98.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_CRN98.cpp Vmath.o
@@ -282,6 +295,33 @@ PGD03_original_ap : ActionPotentialTest.cpp Globals_PGD03.cpp OriginalTimeIntegr
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
 
 
+
+TT06_chunked_interchanged_multithreaded_bm : Benchmark.o Globals_TT06.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(TT06_DEFS) $(OPT) $(EXTRA_FLAGS) -DMULTITHREAD $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_chunked_interchanged_bm : Benchmark.o Globals_TT06.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(TT06_DEFS) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_original_withvecflags_bm : Benchmark.o Globals_TT06.o OriginalTimeIntegrate.cpp OriginalTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_original_bm : Benchmark.cpp Globals_TT06.cpp OriginalTimeIntegrate.cpp OriginalTest_TT06.cpp Vmath.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
+
+
+TT06_chunked_interchanged_multithreaded_ap : ActionPotentialTest.o Globals_TT06.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(TT06_DEFS) $(OPT) $(EXTRA_FLAGS) -DMULTITHREAD $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_chunked_interchanged_ap : ActionPotentialTest.o Globals_TT06.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(TT06_DEFS) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_original_withvecflags_ap : ActionPotentialTest.o Globals_TT06.o OriginalTimeIntegrate.cpp OriginalTest_TT06.cpp Vmath.o
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+TT06_original_ap : ActionPotentialTest.cpp Globals_TT06.cpp OriginalTimeIntegrate.cpp OriginalTest_TT06.cpp Vmath.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
+
+
 Benchmark.o : Benchmark.cpp
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) -c $^ -o $@
 
@@ -312,8 +352,11 @@ Globals_LR91.o : Globals_LR91.cpp
 Globals_PGD03.o : Globals_PGD03.cpp
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(VEC) -c $^ -o $@
 
-.PHONY : clean all courtemanche fenton aliev fitz fox luo pandit actionpotential benchmark
+Globals_TT06.o : Globals_TT06.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(VEC) -c $^ -o $@
+
+.PHONY : clean all courtemanche fenton aliev fitz fox luo pandit ten actionpotential benchmark
 clean :
-	rm $(COURTEMANCHE_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_BM) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP) $(GARBAGE)
+	rm $(COURTEMANCHE_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_BM) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP) $(TEN_BM) $(TEN_AP) $(GARBAGE)
 
 

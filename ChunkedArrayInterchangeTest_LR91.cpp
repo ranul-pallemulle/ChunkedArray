@@ -35,6 +35,8 @@ void init_test(int n)
 
 void v_Update(NekChunkArray::ChunkUnit& chunk)
 {
+    PRAGMA_VECTORIZE_ALIGNED
+    PRAGMA_VECTORIZE_IVDEP
     for (unsigned int i = 0; i < chunk.size; ++i)
     {
 	const NekDouble& V_old = chunk.in0[i];
