@@ -66,11 +66,21 @@ FOX_BM=F02_original_withvecflags_bm \
 FOX_AP=F02_original_withvecflags_ap \
        F02_original_ap
 
-LR91_BM=LR91_original_withvecflags_bm \
+LUO_BM=LR91_chunked_interchanged_multithreaded_bm \
+	LR91_chunked_interchanged_bm \
+	LR91_original_withvecflags_bm \
 	LR91_original_bm
 
-LR91_AP=LR91_original_withvecflags_ap \
+LUO_AP=LR91_chunked_interchanged_multithreaded_ap \
+	LR91_chunked_interchanged_ap \
+	LR91_original_withvecflags_ap \
 	LR91_original_ap
+
+PANDIT_BM=PGD03_original_withvecflags_bm \
+	 PGD03_original_bm
+
+PANDIT_AP=PGD03_original_withvecflags_ap \
+	 PGD03_original_ap
 
 FK_DEFS=-DNUM_IN_OUT_VARS=3 -DHAS_GATES -DNUM_GATE_VARS=2
 CRN98_DEFS=-DNUM_IN_OUT_VARS=21 -DHAS_GATES -DNUM_GATE_VARS=15 -DHAS_CONCENTRATIONS
@@ -78,8 +88,9 @@ AP_DEFS=-DNUM_IN_OUT_VARS=2 -DHAS_CONCENTRATIONS
 FN_DEFS=-DNUM_IN_OUT_VARS=2 -DHAS_CONCENTRATIONS
 F02_DEFS=-DNUM_IN_OUT_VARS=13 -DHAS_GATES -DNUM_GATE_VARS=10 -DHAS_CONCENTRATIONS
 LR91_DEFS=-DNUM_IN_OUT_VARS=8 -DHAS_GATES -DNUM_GATE_VARS=6 -DHAS_CONCENTRATIONS
+PGD03_DEFS=-DNUM_IN_OUT_VARS=27
 
-all: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LR91_BM) $(LR91_AP)
+all: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP)
 
 courtemanche: $(COURTEMANCHE_BM) $(COURTEMANCHE_AP)
 
@@ -91,11 +102,13 @@ fitz: $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP)
 
 fox: $(FOX_BM) $(FOX_AP)
 
-luo: $(LR91_BM) $(LR91_AP)
+luo: $(LUO_BM) $(LUO_AP)
 
-actionpotential: $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_AP) $(FOX_AP) $(LR91_AP)
+pandit: $(PANDIT_BM) $(PANDIT_AP)
 
-benchmark: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(ALIEVPANFILOV_BM) $(FITZHUGHNAGUMO_BM) $(FOX_BM) $(LR91_BM)
+actionpotential: $(COURTEMANCHE_AP) $(FENTONKARMA_AP) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_AP) $(FOX_AP) $(LUO_AP) $(PANDIT_AP)
+
+benchmark: $(COURTEMANCHE_BM) $(FENTONKARMA_BM) $(ALIEVPANFILOV_BM) $(FITZHUGHNAGUMO_BM) $(FOX_BM) $(LUO_BM) $(PANDIT_BM)
 
 
 CRN98_chunked_interchanged_multithread_bm : Benchmark.o Globals_CRN98.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_CRN98.cpp Vmath.o
@@ -230,6 +243,12 @@ F02_original_ap : ActionPotentialTest.cpp Globals_F02.cpp OriginalTimeIntegrate.
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
 
 
+LR91_chunked_interchanged_multithreaded_bm : Benchmark.o Globals_LR91.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_LR91.cpp Vmath.o
+	$(CC) -std=$(STD) $(LR91_DEFS) $(OPT) $(EXTRA_FLAGS) -DMULTITHREAD $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+LR91_chunked_interchanged_bm : Benchmark.o Globals_LR91.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_LR91.cpp Vmath.o
+	$(CC) -std=$(STD) $(LR91_DEFS) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
 LR91_original_withvecflags_bm : Benchmark.o Globals_LR91.o OriginalTimeIntegrate.cpp OriginalTest_LR91.cpp Vmath.o
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
 
@@ -237,12 +256,30 @@ LR91_original_bm : Benchmark.cpp Globals_LR91.cpp OriginalTimeIntegrate.cpp Orig
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
 
 
+LR91_chunked_interchanged_multithreaded_ap : ActionPotentialTest.o Globals_LR91.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_LR91.cpp Vmath.o
+	$(CC) -std=$(STD) $(LR91_DEFS) $(OPT) $(EXTRA_FLAGS) -DMULTITHREAD $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+LR91_chunked_interchanged_ap : ActionPotentialTest.o Globals_LR91.o ChunkedTimeIntegrate.cpp ChunkedArrayInterchangeTest_LR91.cpp Vmath.o
+	$(CC) -std=$(STD) $(LR91_DEFS) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
 LR91_original_withvecflags_ap : ActionPotentialTest.o Globals_LR91.o OriginalTimeIntegrate.cpp OriginalTest_LR91.cpp Vmath.o
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
 
 LR91_original_ap : ActionPotentialTest.cpp Globals_LR91.cpp OriginalTimeIntegrate.cpp OriginalTest_LR91.cpp Vmath.cpp
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
 
+
+PGD03_original_withvecflags_bm : Benchmark.o Globals_PGD03.o OriginalTimeIntegrate.cpp OriginalTest_PGD03.cpp Vmath.o
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+PGD03_original_bm : Benchmark.cpp Globals_PGD03.cpp OriginalTimeIntegrate.cpp OriginalTest_PGD03.cpp Vmath.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
+
+PGD03_original_withvecflags_ap : ActionPotentialTest.o Globals_PGD03.o OriginalTimeIntegrate.cpp OriginalTest_PGD03.cpp Vmath.o
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $(VEC) $^ -o $@ $(LDEPS)
+
+PGD03_original_ap : ActionPotentialTest.cpp Globals_PGD03.cpp OriginalTimeIntegrate.cpp OriginalTest_PGD03.cpp Vmath.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(CDEPS) $^ -o $@ -lbenchmark -lpthread
 
 
 Benchmark.o : Benchmark.cpp
@@ -272,8 +309,11 @@ Globals_F02.o : Globals_F02.cpp
 Globals_LR91.o : Globals_LR91.cpp
 	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(VEC) -c $^ -o $@
 
-.PHONY : clean all courtemanche fenton aliev actionpotential
+Globals_PGD03.o : Globals_PGD03.cpp
+	$(CC) -std=$(STD) $(OPT) $(EXTRA_FLAGS) $(VEC) -c $^ -o $@
+
+.PHONY : clean all courtemanche fenton aliev fitz fox luo pandit actionpotential benchmark
 clean :
-	rm $(COURTEMANCHE_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_BM) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LR91_BM) $(LR91_AP) $(GARBAGE)
+	rm $(COURTEMANCHE_BM) $(COURTEMANCHE_AP) $(FENTONKARMA_BM) $(FENTONKARMA_AP) $(ALIEVPANFILOV_BM) $(ALIEVPANFILOV_AP) $(FITZHUGHNAGUMO_BM) $(FITZHUGHNAGUMO_AP) $(FOX_BM) $(FOX_AP) $(LUO_BM) $(LUO_AP) $(PANDIT_BM) $(PANDIT_AP) $(GARBAGE)
 
 
