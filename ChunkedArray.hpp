@@ -15,13 +15,14 @@
 
 #define ALIGNMENT 32
 
+#ifndef ALIGNMENT
+static_assert(false, "Data alignment unspecified for aligned memory allocation "
+                     "for chunked array.");
+#endif // ALIGNMENT
+
 #ifndef CHUNKTYPE
 #define CHUNKTYPE NekDouble
 #endif // CHUNKTYPE
-
-// #define STRINGIFY(a) #a
-// #define PRAGMA_VECTORIZE_PRIVATE(a,b) _Pragma(STRINGIFY("omp simd
-// private("## a ## "," ## b ##")"))
 
 #if defined(__INTEL_COMPILER)
 #define PRAGMA_VECTORIZE_IVDEP _Pragma("ivdep")
@@ -54,18 +55,18 @@ static_assert(false, "Number of gating variables for cell model not defined. "
 #define CONC_START_IDX BOOST_PP_ADD(NUM_GATE_VARS, 1)
 #else
 #define CONC_START_IDX 1
-#endif
+#endif // HAS_GATES
 #define CONC_END_IDX BOOST_PP_SUB(NUM_IN_OUT_VARS, 1)
-#endif
+#endif // HAS_CONCENTRATIONS
 
-#define APPEND_V(x, y) x##y
-#define APPEND(x, y) APPEND_V(x, y)
+#define APPEND_TEMP(x, y) x##y
+#define APPEND(x, y) APPEND_TEMP(x, y)
 
-#define GEN_INVAR(num) DataType in##num[chunk_len + pad];
-#define GEN_OUTVAR(num) DataType out##num[chunk_len + pad];
-#define GEN_GATEVAR(num) DataType gate##num[chunk_len + pad];
+#define GEN_INVAR(num) T in##num[chunk_len + pad];
+#define GEN_OUTVAR(num) T out##num[chunk_len + pad];
+#define GEN_GATEVAR(num) T gate##num[chunk_len + pad];
 
-template <typename DataType, int chunk_len, int pad> class ChunkArray
+template <typename T, int chunk_len, int pad> class ChunkArray
 {
 public:
     // Unit of data is a set of short arrays
@@ -81,8 +82,8 @@ public:
 #define BOOST_PP_LOCAL_MACRO(n) GEN_OUTVAR(n)
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
-	
-#ifdef HAS_GATES	
+
+#ifdef HAS_GATES
         // generate gating variables
 #define BOOST_PP_LOCAL_MACRO(n) GEN_GATEVAR(n)
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_GATE_VARS - 1)
@@ -98,25 +99,37 @@ public:
     ~ChunkArray();
     ChunkArray &operator=(const ChunkArray &rhs);
     ChunkArray &operator=(ChunkArray &&rhs);
-    ChunkUnit &operator[](unsigned int i) const {return m_data[i];}
-    ChunkUnit *begin() {return m_data;}
-    ChunkUnit *end() {return m_data + m_num_chunks;}
+    ChunkUnit &operator[](unsigned int i) const
+    {
+        return m_data[i];
+    }
+    ChunkUnit *begin()
+    {
+        return m_data;
+    }
+    ChunkUnit *end()
+    {
+        return m_data + m_num_chunks;
+    }
     static void fromInArray(const Array<OneD, double> &inarray,
                             ChunkUnit &chunk, int chunk_num);
     static void toOutArray(const ChunkUnit &chunk, Array<OneD, double> &inarray,
                            int chunk_num);
-    size_t num_elements() {return m_num_chunks;}
+    size_t num_elements()
+    {
+        return m_num_chunks;
+    }
 
 private:
     void allocate_aligned_memory(size_t size, size_t alignment);
     void release_aligned_memory();
     size_t m_num_chunks{0};
     size_t m_remainder{0};
-    ChunkUnit *m_data = nullptr; // heap allocated chunks
+    ChunkUnit *m_data{nullptr}; // heap allocated chunks
 };
 
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>::ChunkArray(size_t num_chunks)
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::ChunkArray(size_t num_chunks)
 {
     m_num_chunks = num_chunks;
     m_remainder  = 0;
@@ -124,8 +137,8 @@ ChunkArray<DataType, chunk_len, pad>::ChunkArray(size_t num_chunks)
 }
 
 // Construct from Shared Array
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>::ChunkArray(
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::ChunkArray(
     const Array<OneD, const Array<OneD, double>> &inarray)
 {
     int np      = inarray[0].num_elements();
@@ -151,7 +164,7 @@ ChunkArray<DataType, chunk_len, pad>::ChunkArray(
             // generate assignments to m_data[i].inK[j] for all K
             // e.g: m_data[i].in2[j] = inarray[2][i*chunk_len + j];
 #define BOOST_PP_LOCAL_MACRO(n)                                                \
-            m_data[i].in##n[j] = inarray[n][i * chunk_len + j];
+    m_data[i].in##n[j] = inarray[n][i * chunk_len + j];
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
         }
@@ -163,7 +176,7 @@ ChunkArray<DataType, chunk_len, pad>::ChunkArray(
         m_data[m_num_chunks - 1].size = m_remainder;
         // generate assignments to m_data[i].inK[j] for all K
 #define BOOST_PP_LOCAL_MACRO(n)                                                \
-        m_data[m_num_chunks - 1].in##n[j] =                                    \
+    m_data[m_num_chunks - 1].in##n[j] =                                        \
         inarray[n][(m_num_chunks - 1) * chunk_len + j];
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
@@ -171,8 +184,8 @@ ChunkArray<DataType, chunk_len, pad>::ChunkArray(
 }
 
 // Copy constructor
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>::ChunkArray(const ChunkArray &rhs)
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::ChunkArray(const ChunkArray &rhs)
 {
     m_num_chunks = rhs.m_num_chunks;
     m_remainder  = rhs.m_remainder;
@@ -181,19 +194,18 @@ ChunkArray<DataType, chunk_len, pad>::ChunkArray(const ChunkArray &rhs)
 }
 
 // Move constructor
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>::ChunkArray(ChunkArray &&rhs)
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::ChunkArray(ChunkArray &&rhs)
 {
     m_num_chunks = rhs.m_num_chunks;
     m_remainder  = rhs.m_remainder;
     m_data       = rhs.m_data;
-
-    rhs.m_data = nullptr;
+    rhs.m_data   = nullptr;
 }
 
 // Destructor
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>::~ChunkArray()
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::~ChunkArray()
 {
     release_aligned_memory();
     m_num_chunks = 0;
@@ -201,9 +213,9 @@ ChunkArray<DataType, chunk_len, pad>::~ChunkArray()
 }
 
 // Copy assignment operator
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>
-    &ChunkArray<DataType, chunk_len, pad>::operator=(const ChunkArray &rhs)
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad> &ChunkArray<T, chunk_len, pad>::operator=(
+    const ChunkArray &rhs)
 {
     if (this == &rhs)
     {
@@ -218,12 +230,13 @@ ChunkArray<DataType, chunk_len, pad>
     m_num_chunks = rhs.m_num_chunks;
     m_remainder  = rhs.m_remainder;
     std::copy(rhs.m_data, rhs.m_data + rhs.m_num_chunks, m_data);
+    return *this;
 }
 
 // Move assignment operator
-template <typename DataType, int chunk_len, int pad>
-ChunkArray<DataType, chunk_len, pad>
-    &ChunkArray<DataType, chunk_len, pad>::operator=(ChunkArray &&rhs)
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad> &ChunkArray<T, chunk_len, pad>::operator=(
+    ChunkArray &&rhs)
 {
     ASSERTL0((this != &rhs), "Move assignment to self.");
     release_aligned_memory();
@@ -237,8 +250,8 @@ ChunkArray<DataType, chunk_len, pad>
 }
 
 // Copy input voltage from SharedArray (single chunk)
-template <typename DataType, int chunk_len, int pad>
-void ChunkArray<DataType, chunk_len, pad>::fromInArray(
+template <typename T, int chunk_len, int pad>
+void ChunkArray<T, chunk_len, pad>::fromInArray(
     const Array<OneD, double> &inarray, ChunkUnit &chunk, int chunk_num)
 {
     PRAGMA_VECTORIZE_IVDEP
@@ -252,9 +265,10 @@ void ChunkArray<DataType, chunk_len, pad>::fromInArray(
 }
 
 // Copy output voltage into SharedArray (single chunk)
-template <typename DataType, int chunk_len, int pad>
-void ChunkArray<DataType, chunk_len, pad>::toOutArray(
-    const ChunkUnit &chunk, Array<OneD, double> &outarray, int chunk_num)
+template <typename T, int chunk_len, int pad>
+void ChunkArray<T, chunk_len, pad>::toOutArray(const ChunkUnit &chunk,
+                                               Array<OneD, double> &outarray,
+                                               int chunk_num)
 {
     PRAGMA_VECTORIZE_IVDEP
     for (unsigned int i = 0; i < chunk.size; ++i)
@@ -264,9 +278,9 @@ void ChunkArray<DataType, chunk_len, pad>::toOutArray(
 }
 
 // Aligned memory allocation
-template <typename DataType, int chunk_len, int pad>
-void ChunkArray<DataType, chunk_len, pad>::allocate_aligned_memory(
-    size_t size, size_t alignment)
+template <typename T, int chunk_len, int pad>
+void ChunkArray<T, chunk_len, pad>::allocate_aligned_memory(size_t size,
+                                                            size_t alignment)
 {
 #if defined(__INTEL_COMPILER)
     m_data = static_cast<ChunkUnit *>(_mm_malloc(size, alignment));
@@ -286,13 +300,13 @@ void ChunkArray<DataType, chunk_len, pad>::allocate_aligned_memory(
         ASSERTL0(false, "_aligned_malloc failed to allocate aligned memory.");
     }
 #else
-    static_assert(false, "Unsupported compiler for allocating aligned memory.");
+    ASSERTL0(false, "Unsupported compiler for allocating aligned memory.");
 #endif
 }
 
 // Aligned memory deallocation
-template <typename DataType, int chunk_len, int pad>
-void ChunkArray<DataType, chunk_len, pad>::release_aligned_memory()
+template <typename T, int chunk_len, int pad>
+void ChunkArray<T, chunk_len, pad>::release_aligned_memory()
 {
 #if defined(__INTEL_COMPILER)
     _mm_free(m_data);
@@ -301,7 +315,7 @@ void ChunkArray<DataType, chunk_len, pad>::release_aligned_memory()
 #elif defined(_MSC_VER)
     _aligned_free(m_data);
 #else
-    static_assert(false, "Unsupported compiler for allocating aligned memory.");
+    ASSERTL0(false, "Unsupported compiler for allocating aligned memory.");
 #endif
 }
 

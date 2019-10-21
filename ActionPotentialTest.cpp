@@ -1,6 +1,9 @@
 #include <iostream>
 #include <string>
 #include <chrono>
+
+#include <cfenv>
+
 #include "SharedArray.hpp"
 #include "VmathArray.hpp"
 
@@ -32,6 +35,7 @@ unsigned int nSteps = finTime/timeStep;
 
 int main(int argc, char** argv)
 {
+    feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
     int num_points;
     if (argc > 1)
     {
