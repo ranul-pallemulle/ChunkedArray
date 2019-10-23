@@ -1,11 +1,9 @@
 #include <vector>
-#include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
 #include "CellModelConstants_CRN98.hpp"
 #include "ChunkedArray.hpp"
 
-Array<OneD, Array<OneD, NekDouble> > cellSol;
 NekChunkArray m_data;
 
 extern NekDouble lastTime;
@@ -13,37 +11,28 @@ extern unsigned int substeps;
 
 void init_test(int n)
 {
-    unsigned int n_var = 21;
     int nq = n;
-    
-    cellSol = Array<OneD, Array<OneD, NekDouble>> (n_var);
-    for (unsigned int i = 0; i < n_var; ++i) {
-	cellSol[i] = Array<OneD, NekDouble> (nq);
-    }
-
-    Vmath::Fill(nq, -81.0,      cellSol[0],  1);
-    Vmath::Fill(nq, 2.908e-03,  cellSol[1],  1);
-    Vmath::Fill(nq, 9.649e-01,  cellSol[2],  1);
-    Vmath::Fill(nq, 9.775e-01,  cellSol[3],  1);
-    Vmath::Fill(nq, 3.043e-02,  cellSol[4],  1);
-    Vmath::Fill(nq, 9.992e-01,  cellSol[5],  1);
-    Vmath::Fill(nq, 4.966e-03,  cellSol[6],  1);
-    Vmath::Fill(nq, 9.986e-01,  cellSol[7],  1);
-    Vmath::Fill(nq, 3.296e-05,  cellSol[8],  1);
-    Vmath::Fill(nq, 1.869e-02,  cellSol[9],  1);
-    Vmath::Fill(nq, 1.367e-04,  cellSol[10], 1);
-    Vmath::Fill(nq, 9.996e-01,  cellSol[11], 1);
-    Vmath::Fill(nq, 7.755e-01,  cellSol[12], 1);
-    Vmath::Fill(nq, 2.35e-112,  cellSol[13], 1);
-    Vmath::Fill(nq, 1.0,        cellSol[14], 1);
-    Vmath::Fill(nq, 0.9992,     cellSol[15], 1);
-    Vmath::Fill(nq, 1.117e+01,  cellSol[16], 1);
-    Vmath::Fill(nq, 1.013e-04,  cellSol[17], 1);
-    Vmath::Fill(nq, 1.39e+02,   cellSol[18], 1);
-    Vmath::Fill(nq, 1.488,      cellSol[19], 1);
-    Vmath::Fill(nq, 1.488,      cellSol[20], 1);
-
-    m_data = NekChunkArray{cellSol};
+    m_data = NekChunkArray(nq, {-81.0,
+				2.908e-03,
+				9.649e-01,
+				9.775e-01,
+				3.043e-02,
+				9.992e-01,
+				4.966e-03,
+				9.986e-01,
+				3.296e-05,
+				1.869e-02,
+				1.367e-04,
+				9.996e-01,
+				7.755e-01,
+				2.35e-112,
+				1.0,
+				0.9992,
+				1.117e+01,
+				1.013e-04,
+				1.39e+02,
+				1.488,
+				1.488});
 }
 
 void v_Update(NekChunkArray::ChunkUnit& chunk)

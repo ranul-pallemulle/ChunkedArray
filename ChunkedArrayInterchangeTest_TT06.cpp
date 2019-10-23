@@ -1,11 +1,9 @@
 #include <vector>
-#include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
 #include "CellModelConstants_TT06.hpp"
 #include "ChunkedArray.hpp"
 
-Array<OneD, Array<OneD, NekDouble> > cellSol;
 NekChunkArray m_data;
 
 extern NekDouble lastTime;
@@ -13,36 +11,26 @@ extern unsigned int substeps;
 
 void init_test(int n)
 {
-    unsigned int n_var = 19;
     int nq = n;
-
-    cellSol = Array<OneD, Array<OneD, NekDouble>> (n_var);
-    for (unsigned int i = 0; i < n_var; ++i)
-    {
-	cellSol[i] = Array<OneD, NekDouble> (nq);
-    }
-
-    Vmath::Fill(nq, -86.709,      cellSol[0],   1);
-    Vmath::Fill(nq, 0.00448,      cellSol[1],   1);
-    Vmath::Fill(nq, 0.476,        cellSol[2],   1);
-    Vmath::Fill(nq, 0.0087,       cellSol[3],   1);
-    Vmath::Fill(nq, 0.00155,      cellSol[4],   1);
-    Vmath::Fill(nq, 0.7573,       cellSol[5],   1);
-    Vmath::Fill(nq, 0.7225,       cellSol[6],   1);
-    Vmath::Fill(nq, 3.164e-5,     cellSol[7],   1);
-    Vmath::Fill(nq, 0.8009,       cellSol[8],   1);
-    Vmath::Fill(nq, 0.9778,       cellSol[9],   1);
-    Vmath::Fill(nq, 0.9953,       cellSol[10],  1);
-    Vmath::Fill(nq, 0.3212,       cellSol[11],  1);
-    Vmath::Fill(nq, 2.235e-8,     cellSol[12],  1);
-    Vmath::Fill(nq, 0.00013,      cellSol[13],  1);
-    Vmath::Fill(nq, 3.715,        cellSol[14],  1);
-    Vmath::Fill(nq, 0.00036,      cellSol[15],  1);
-    Vmath::Fill(nq, 0.9068,       cellSol[16],  1);
-    Vmath::Fill(nq, 10.355,       cellSol[17],  1);
-    Vmath::Fill(nq, 138.4,        cellSol[18],  1);
-
-    m_data = NekChunkArray{cellSol};
+    m_data = NekChunkArray(nq, {-86.709,
+				0.00448,
+				0.476,
+				0.0087,
+				0.00155,
+				0.7573,
+				0.7225,
+				3.164e-5,
+				0.8009,
+				0.9778,
+				0.9953,
+				0.3212,
+				2.235e-8,
+				0.00013,
+				3.715,
+				0.00036,
+				0.9068,
+				10.355,
+				138.4});
 }
 
 void v_Update(NekChunkArray::ChunkUnit& chunk)

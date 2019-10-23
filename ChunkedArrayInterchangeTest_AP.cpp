@@ -1,11 +1,9 @@
 #include <vector>
-#include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
 #include "CellModelConstants_AP.hpp"
 #include "ChunkedArray.hpp"
 
-Array<OneD, Array<OneD, NekDouble> > cellSol;
 NekChunkArray m_data;
 
 extern NekDouble lastTime;
@@ -13,19 +11,8 @@ extern unsigned int substeps;
 
 void init_test(int n)
 {
-    unsigned int n_var = 2;
     int nq = n;
-
-    cellSol = Array<OneD, Array<OneD, NekDouble>> (n_var);
-    for (unsigned int i = 0; i < n_var; ++i)
-    {
-	cellSol[i] = Array<OneD, NekDouble> (nq);
-    }
-
-    Vmath::Fill(nq, 0.0, cellSol[0], 1);
-    Vmath::Fill(nq, 0.0, cellSol[0], 1);
-
-    m_data = NekChunkArray{cellSol};
+    m_data = NekChunkArray(nq, {0.0, 0.0});
 }
 
 void v_Update(NekChunkArray::ChunkUnit& chunk)

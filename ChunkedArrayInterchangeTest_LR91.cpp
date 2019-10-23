@@ -1,11 +1,9 @@
 #include <vector>
-#include "SharedArray.hpp"
 #include "VmathArray.hpp"
 #include "Assertions.hpp"
 #include "ChunkedArray.hpp"
 #define NekDouble double
 
-Array<OneD, Array<OneD, NekDouble> > cellSol;
 NekChunkArray m_data;
 
 extern NekDouble lastTime;
@@ -13,24 +11,15 @@ extern unsigned int substeps;
 
 void init_test(int n)
 {
-    unsigned int n_var = 8;
     int nq = n;
-
-    cellSol = Array<OneD, Array<OneD, NekDouble> > (n_var);
-    for (unsigned int i = 0; i < n_var; ++i) {
-	cellSol[i] = Array<OneD, NekDouble> (nq);
-    }
-
-    Vmath::Fill(nq, -84.3801107371,       cellSol[0],  1);
-    Vmath::Fill(nq, 0.00171338077730188,  cellSol[1],  1);
-    Vmath::Fill(nq, 0.982660523699656,    cellSol[2],  1);
-    Vmath::Fill(nq, 0.989108212766685,    cellSol[3],  1);
-    Vmath::Fill(nq, 0.00017948816388306,  cellSol[4],  1);
-    Vmath::Fill(nq, 0.00302126301779861,  cellSol[5],  1);
-    Vmath::Fill(nq, 0.999967936476325,    cellSol[6],  1);
-    Vmath::Fill(nq, 0.0417603108167287,   cellSol[7],  1);
-
-    m_data = NekChunkArray{cellSol};
+    m_data = NekChunkArray(nq, {-84.3801107371,
+				0.00171338077730188,
+				0.982660523699656,
+				0.989108212766685,
+				0.00017948816388306,
+				0.00302126301779861,
+				0.999967936476325,
+				0.0417603108167287});
 }
 
 void v_Update(NekChunkArray::ChunkUnit& chunk)

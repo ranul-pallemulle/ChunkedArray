@@ -93,6 +93,8 @@ public:
 
     ChunkArray() = default;
     ChunkArray(size_t num_chunks);
+    ChunkArray(size_t num_elements,
+               std::initializer_list<double> initial_values);
     ChunkArray(const Array<OneD, const Array<OneD, double>> &inarray);
     ChunkArray(const ChunkArray &rhs);
     ChunkArray(ChunkArray &&rhs);
@@ -136,6 +138,49 @@ ChunkArray<T, chunk_len, pad>::ChunkArray(size_t num_chunks)
     allocate_aligned_memory(sizeof(ChunkUnit) * num_chunks, ALIGNMENT);
 }
 
+// Construct with initial values
+template <typename T, int chunk_len, int pad>
+ChunkArray<T, chunk_len, pad>::ChunkArray(
+    size_t num_elements, std::initializer_list<double> initial_values)
+{
+    m_remainder = num_elements % chunk_len;
+    if (m_remainder)
+    {
+        m_num_chunks = num_elements / chunk_len + 1;
+    }
+    else
+    {
+        m_num_chunks = num_elements / chunk_len;
+    }
+    allocate_aligned_memory(sizeof(ChunkUnit) * m_num_chunks, ALIGNMENT);
+    int n_iter = m_remainder > 0 ? m_num_chunks - 1 : m_num_chunks;
+
+    for (int i = 0; i < n_iter; ++i)
+    {
+        m_data[i].size = chunk_len;
+        PRAGMA_VECTORIZE_IVDEP
+        for (int j = 0; j < chunk_len; ++j)
+        {
+#define BOOST_PP_LOCAL_MACRO(n) m_data[i].in##n[j] = initial_values.begin()[n];
+#define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
+#include BOOST_PP_LOCAL_ITERATE()
+        }
+    }
+
+    if (m_remainder)
+    {
+        m_data[m_num_chunks - 1].size = m_remainder;
+        PRAGMA_VECTORIZE_IVDEP
+        for (size_t j = 0; j < m_remainder; ++j)
+        {
+#define BOOST_PP_LOCAL_MACRO(n)                                                \
+    m_data[m_num_chunks - 1].in##n[j] = initial_values.begin()[n];
+#define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
+#include BOOST_PP_LOCAL_ITERATE()
+        }
+    }
+}
+
 // Construct from Shared Array
 template <typename T, int chunk_len, int pad>
 ChunkArray<T, chunk_len, pad>::ChunkArray(
@@ -156,11 +201,12 @@ ChunkArray<T, chunk_len, pad>::ChunkArray(
 
     for (int i = 0; i < n_iter; ++i)
     {
+        // set chunk size
+        m_data[i].size = chunk_len;
+
         PRAGMA_VECTORIZE_IVDEP
         for (int j = 0; j < chunk_len; ++j)
         {
-            // set chunk size
-            m_data[i].size = chunk_len;
             // generate assignments to m_data[i].inK[j] for all K
             // e.g: m_data[i].in2[j] = inarray[2][i*chunk_len + j];
 #define BOOST_PP_LOCAL_MACRO(n)                                                \
@@ -169,17 +215,21 @@ ChunkArray<T, chunk_len, pad>::ChunkArray(
 #include BOOST_PP_LOCAL_ITERATE()
         }
     }
-    // remainder loop
-    PRAGMA_VECTORIZE_IVDEP
-    for (unsigned int j = 0; j < m_remainder; ++j)
+
+    if (m_remainder)
     {
         m_data[m_num_chunks - 1].size = m_remainder;
-        // generate assignments to m_data[i].inK[j] for all K
+        // remainder loop
+        PRAGMA_VECTORIZE_IVDEP
+        for (unsigned int j = 0; j < m_remainder; ++j)
+        {
+            // generate assignments to m_data[i].inK[j] for all K
 #define BOOST_PP_LOCAL_MACRO(n)                                                \
     m_data[m_num_chunks - 1].in##n[j] =                                        \
         inarray[n][(m_num_chunks - 1) * chunk_len + j];
 #define BOOST_PP_LOCAL_LIMITS (0, NUM_IN_OUT_VARS - 1)
 #include BOOST_PP_LOCAL_ITERATE()
+        }
     }
 }
 
